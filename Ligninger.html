@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <title>Introduktion til førstegradsligninger</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async
+            src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+    </script>
+    <style>
+        /* Behold den eksisterende CSS her */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f6f9;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        p {
+            line-height: 1.6;
+            color: #34495e;
+        }
+        .task-container {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #fff;
+            border: 2px solid #2c3e50;
+            border-radius: 10px;
+            box-shadow: 2px 2px 12px rgba(0,0,0,0.1);
+        }
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .buttons button {
+            margin-top: 10px;
+            padding: 8px 12px;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #3498db;
+            color: #fff;
+        }
+        .buttons button.reset {
+            background-color: #e74c3c;
+        }
+        .feedback {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .feedback.correct {
+            color: green;
+        }
+        .feedback.incorrect {
+            color: red;
+        }
+        .hint {
+            margin-top: 10px;
+            font-style: italic;
+            color: #7f8c8d;
+            display: none; /* Skjult som standard */
+        }
+        .error {
+            color: red;
+        }
+        .score-board {
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 2px solid #2c3e50;
+            border-radius: 10px;
+            background-color: #fff;
+            font-weight: bold;
+            font-size: 20px;
+            color: #2c3e50;
+            text-align: center;
+        }
+        .hidden {
+            display: none;
+        }
+        .login-container {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #fff;
+            border: 2px solid #2c3e50;
+            border-radius: 10px;
+            box-shadow: 2px 2px 12px rgba(0,0,0,0.1);
+        }
+        .login-container input {
+            padding: 10px;
+            font-size: 16px;
+            width: 80%;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .login-container button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #2ecc71;
+            color: #fff;
+        }
+        .radio-group {
+            margin-top: 10px;
+        }
+        .radio-group label {
+            display: block;
+            margin-bottom: 5px;
+            cursor: pointer;
+        }
+        .fill-in-blank input {
+            width: 60px;
+            text-align: center;
+            padding: 5px;
+            margin: 0 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        /* Tilføj CSS til træk-og-slip-opgaver */
+        .draggable-items, .dropzone-items {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .item, .dropzone {
+            padding: 15px;
+            margin: 5px;
+            border: 2px dashed #2c3e50;
+            border-radius: 5px;
+            text-align: center;
+            cursor: grab;
+            background-color: #ecf0f1;
+            min-width: 180px;
+            transition: background-color 0.3s, border-color 0.3s;
+            color: black; /* Sikrer at teksten er sort */
+        }
+        .dropzone.hovered {
+            border-color: #3498db;
+            background-color: #d0e7ff;
+        }
+        .dropzone.correct {
+            border-color: #a9dfbf; /* Lysere grøn */
+            background-color: #a9dfbf; /* Lysere grøn */
+        }
+        .dropzone.incorrect {
+            border-color: #f5b7b1; /* Lysere rød */
+            background-color: #f5b7b1; /* Lysere rød */
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Container -->
+    <div id="login" class="login-container">
+        <h1>Velkommen til lektionen</h1>
+        <p>Indtast dit navn for at starte:</p>
+        <input type="text" id="studentName" placeholder="Dit navn">
+        <br><br>
+        <button onclick="startLesson()">Start lektion</button>
+    </div>
+
+    <!-- Lesson Content -->
+    <div id="content" class="hidden">
+        <div id="scoreBoard" class="score-board"></div>
+
+        <!-- Indhold starter her -->
+        <h2>Introduktion til førstegradsligninger</h2>
+        <p>Vi skal lære om <em>førstegradsligninger</em>. For at gøre det nemt at forstå, vil vi bruge billedet af en vægt, som I måske har set før – en, der har to skåle og skal være i balance. Ligesom vi vil sikre, at vægten står lige, skal vi også sørge for, at begge sider af ligningen er i balance.</p>
+		<img src="https://www.katesmathlessons.com/uploads/1/6/1/0/1610286/7264564.png" width="400" alt="Indsæt billede beskrivelse">
+        <p>Vi starter med nogle enkle eksempler og opgaver, og senere vil vi også kigge på ligninger med parenteser, som gør det lidt mere spændende. Det hele bliver dog stadig som at balancere en vægt!</p>
+        <hr>
+
+        <h3>Hvad er en ligning?</h3>
+        <p>Forestil dig en vægt, der har to sider. En ligning er ligesom en vægt, hvor begge sider skal være lige meget værd. Hvis vi har noget tungere på den ene side, skal vi tilføje noget på den anden side, indtil begge sider er lige.</p>
+        <p>En ligning kunne f.eks. se sådan ud:</p>
+        <p>\[
+        x + 2 = 7
+        \]</p>
+        <p>Her er \( x + 2 \) den ene side af vægten, og \( 7 \) er den anden side. Målet er at finde ud af, hvad \( x \) er, så vægten balancerer.</p>
+
+        <!-- Opgave 1: Forståelsesopgave (Flervalgsopgave) -->
+        <div class="task-container">
+            <div class="task-header">
+                <h3>Opgave 1</h3>
+            </div>
+            <p>Hvilket af følgende beskriver en ligning bedst?</p>
+            <div class="radio-group">
+                <label><input type="radio" name="q1" value="A"> En formel, hvor vi altid skal gange tal</label>
+                <label><input type="radio" name="q1" value="B"> En balance, hvor begge sider skal være lige meget værd</label>
+                <label><input type="radio" name="q1" value="C"> En opskrift med mange ingredienser</label>
+            </div>
+            <div class="buttons">
+                <button onclick="checkAnswer('q1', ['B'], 'feedback1', 'radio')">Tjek svar</button>
+            </div>
+            <div id="feedback1" class="feedback"></div>
+        </div>
+
+        <hr>
+        <h3>Hvordan løser vi ligningen?</h3>
+        <p>For at finde ud af, hvad \( x \) er, vil vi gøre noget ved begge sider af ligningen for at holde dem i balance. Vi prøver at isolere \( x \) – altså få \( x \) til at stå alene på den ene side af ligningen.</p>
+        <p>I eksemplet:</p>
+        <p>\[
+        x + 2 = 7
+        \]</p>
+        <p>hvordan kan vi få \( x \) alene?</p>
+        <ol>
+            <li>Først ser vi på tallet \( 2 \). For at få \( x \) alene, skal vi fjerne \( 2 \) fra venstre side.</li>
+            <li>Vi kan trække \( 2 \) fra på begge sider af vægten, så vægten stadig balancerer.</li>
+        </ol>
+        <p>Det ser sådan ud:</p>
+        <p>\[
+        2 + x - 2 = 7 - 2
+        \]</p>
+        <p>Når vi regner det ud, får vi:</p>
+        <p>\[
+        x = 2
+        \]</p>
+        <p>Nu er begge sider i balance, fordi \( 5 + 2 = 7 \).</p>
+
+        <!-- Opgave 2: Træk-og-slip-opgave -->
+        <div class="task-container" id="dragAndDropContainer2">
+            <div class="task-header">
+                <h3>Opgave 2</h3>
+            </div>
+            <p>Løs ligningen \( 3 + x = 7 \) ved at trække skridtene til de korrekte felter:</p>
+            <div class="draggable-items" id="dragItems2"></div>
+            <div class="dropzone-items" id="dropZones2"></div>
+            <div class="buttons">
+                <button id="checkButton2">Tjek</button>
+                <button id="resetButton2" class="reset">Nulstil</button>
+            </div>
+            <div id="feedback2" class="feedback"></div>
+            <div class="hint" id="hint2">Tjek dit svar og prøv igen</div>
+        </div>
+
+        <!-- Opgave 3: Udfyld det tomme felt -->
+        <div class="task-container">
+            <div class="task-header">
+                <h3>Opgave 3</h3>
+            </div>
+            <p>Løs følgende ligning:</p>
+            <p>\[
+            4 + x = 10
+            \]</p>
+            <p>\( x = \)</p>
+            <input type="text" id="q3" placeholder="Dit svar">
+            <div class="buttons">
+                <button onclick="checkAnswer('q3', ['6'], 'feedback3')">Tjek svar</button>
+            </div>
+            <div id="feedback3" class="feedback"></div>
+        </div>
+
+        <hr>
+        <h3>Gøre Prøve</h3>
+        <p>Når vi har fundet en værdi for \( x \), kan vi lave en prøve for at sikre os, at løsningen er korrekt. Lad os gøre prøve for vores eksempel:</p>
+        <p>Vi fandt, at \( x = 4 \). Lad os sætte \( 4 \) ind i den oprindelige ligning for at se, om det hele balancerer:</p>
+        <p>\[
+        3 + x = 7
+        \]</p>
+        <p>\[
+        3 + 4 = 7
+        \]</p>
+        <p>Det passer, for \( 3 + 4 \) er virkelig \( 7 \). Det betyder, at vores løsning \( x = 4 \) er korrekt.</p>
+
+        <!-- Opgave 4: Forståelsesopgave (Flervalgsopgave) -->
+        <div class="task-container">
+            <div class="task-header">
+                <h3>Opgave 4</h3>
+            </div>
+            <p>Hvis vi sætter \( x = 4 \) ind i ligningen \( 3 + x = 7 \), balancerer begge sider af ligningen. Er løsningen korrekt?</p>
+            <div class="radio-group">
+                <label><input type="radio" name="q4" value="A"> Ja</label>
+                <label><input type="radio" name="q4" value="B"> Nej</label>
+            </div>
+            <div class="buttons">
+                <button onclick="checkAnswer('q4', ['A'], 'feedback4', 'radio')">Tjek svar</button>
+            </div>
+            <div id="feedback4" class="feedback"></div>
+        </div>
+
+        <hr>
+        <h3>Multiplikation i ligninger</h3>
+        <p>Nogle gange vil vi støde på en ligning, hvor der står noget som:</p>
+        <p>\[
+        2 \cdot x = 8
+        \]</p>
+        <p>Igen vil vi tænke på, hvordan vi kan få \( x \) alene på den ene side.</p>
+        <p>For at løse \( 2 \cdot x = 8 \), skal vi finde ud af, hvad vi kan gøre for at "fjerne" \( 2 \). Da \( 2 \) og \( x \) er ganget sammen, kan vi gøre det modsatte: Vi dividerer begge sider med \( 2 \).</p>
+        <p>Sådan her:</p>
+        <p>\[
+        \frac{2 \cdot x}{2} = \frac{8}{2}
+        \]</p>
+        <p>Når vi regner det ud, får vi:</p>
+        <p>\[
+        x = 4
+        \]</p>
+
+        <!-- Opgave 5: Træk-og-slip-opgave -->
+        <div class="task-container" id="dragAndDropContainer5">
+            <div class="task-header">
+                <h3>Opgave 5</h3>
+            </div>
+            <p>Løs ligningen \( 2 \cdot x = 8 \) ved at trække skridtene til de korrekte felter:</p>
+            <div class="draggable-items" id="dragItems5"></div>
+            <div class="dropzone-items" id="dropZones5"></div>
+            <div class="buttons">
+                <button id="checkButton5">Tjek</button>
+                <button id="resetButton5" class="reset">Nulstil</button>
+            </div>
+            <div id="feedback5" class="feedback"></div>
+            <div class="hint" id="hint5">Tjek dit svar og prøv igen</div>
+        </div>
+
+        <!-- Opgave 6: Udfyld det tomme felt -->
+        <div class="task-container">
+            <div class="task-header">
+                <h3>Opgave 6</h3>
+            </div>
+            <p>Løs ligningen:</p>
+            <p>\[
+            3 \cdot x = 12
+            \]</p>
+            <p>\( x = \)</p>
+            <input type="text" id="q6" placeholder="Dit svar">
+            <div class="buttons">
+                <button onclick="checkAnswer('q6', ['4'], 'feedback6')">Tjek svar</button>
+            </div>
+            <div id="feedback6" class="feedback"></div>
+        </div>
+
+        <hr>
+        <h3>Gøre Prøve</h3>
+        <p>Lad os lave prøve for at sikre os, at \( x = 4 \) er korrekt:</p>
+        <p>\[
+        2 \cdot x = 8
+        \]</p>
+        <p>\[
+        2 \cdot 4 = 8
+        \]</p>
+        <p>Det passer, for \( 2 \cdot 4 \) giver \( 8 \). Det betyder, at vores løsning \( x = 4 \) er korrekt.</p>
+
+        <!-- Opgave 7: Forståelsesopgave (Flervalgsopgave) -->
+        <div class="task-container">
+            <div class="task-header">
+                <h3>Opgave 7</h3>
+            </div>
+            <p>Er løsningen \( x = 4 \) korrekt for ligningen \( 2 \cdot x = 8 \)?</p>
+            <div class="radio-group">
+                <label><input type="radio" name="q7" value="A"> Ja</label>
+                <label><input type="radio" name="q7" value="B"> Nej</label>
+            </div>
+            <div class="buttons">
+                <button onclick="checkAnswer('q7', ['A'], 'feedback7', 'radio')">Tjek svar</button>
+            </div>
+            <div id="feedback7" class="feedback"></div>
+        </div>
+
+        <hr>
+        <h3>Ligninger med parenteser</h3>
+        <p>Nu skal vi prøve nogle ligninger, hvor der også er parenteser. </p>
+        <p>For eksempel:</p>
+        <p>\[
+        2 \cdot (x + 3) = 14
+        \]</p>
+        <p>Når vi ser en parentes, betyder det, at vi skal gange hele indholdet af parentesen med \( 2 \). Lad os løse ligningen trin for trin:</p>
+        <ol>
+            <li>Start med at fjerne parentesen ved at gange ind i parentesen:
+                \[
+                2 \cdot (x + 3) = 14
+                \]
+                bliver til:
+                \[
+                2x + 6 = 14
+                \]
+            </li>
+            <li>Nu ser ligningen mere velkendt ud! Vi skal isolere \( x \), så vi starter med at fjerne \( 6 \) ved at trække det fra begge sider:
+                \[
+                2x + 6 - 6 = 14 - 6
+                \]
+                \[
+                2x = 8
+                \]
+            </li>
+            <li>For at få \( x \) alene, dividerer vi begge sider med \( 2 \):
+                \[
+                \frac{2x}{2} = \frac{8}{2}
+                \]
+                \[
+                x = 4
+                \]
+            </li>
+        </ol>
+
+        <!-- Opgave 8: Træk-og-slip-opgave -->
+        <div class="task-container" id="dragAndDropContainer8">
+            <div class="task-header">
+                <h3>Opgave 8</h3>
+            </div>
+            <p>Løs ligningen \( 2 \cdot (x + 5) = 20 \) ved at trække skridtene til de korrekte felter (Hint: Se eksemplet ovenfor):</p>
+            <div class="draggable-items" id="dragItems8"></div>
+            <div class="dropzone-items" id="dropZones8"></div>
+            <div class="buttons">
+                <button id="checkButton8">Tjek</button>
+                <button id="resetButton8" class="reset">Nulstil</button>
+            </div>
+            <div id="feedback8" class="feedback"></div>
+            <div class="hint" id="hint8">Tjek dit svar og prøv igen</div>
+        </div>
+
+        <hr>
+        <h3>Gøre Prøve</h3>
+        <p>Lad os lave prøve for at sikre os, at \( x = 4 \) er korrekt:</p>
+        <p>Sæt \( x = 4 \) tilbage i den oprindelige ligning:</p>
+        <p>\[
+        2 \cdot (x + 3) = 14
+        \]</p>
+        <p>\[
+        2 \cdot (4 + 3) = 14
+        \]</p>
+        <p>\[
+        2 \cdot 7 = 14
+        \]</p>
+        <p>\[
+        14 = 14
+        \]</p>
+        <p>Det passer! Løsningen \( x = 4 \) er altså korrekt.</p>
+
+        <!-- Opgave 9: Forståelsesopgave (Flervalgsopgave) -->
+        <div class="task-container">
+            <div class="task-header">
+                <h3>Opgave 9</h3>
+            </div>
+            <p>Hvis vi sætter \( x = 4 \) ind i ligningen \( 2 \cdot (x + 3) = 14 \), balancerer begge sider af ligningen. Er løsningen korrekt?</p>
+            <div class="radio-group">
+                <label><input type="radio" name="q9" value="A"> Ja</label>
+                <label><input type="radio" name="q9" value="B"> Nej</label>
+            </div>
+            <div class="buttons">
+                <button onclick="checkAnswer('q9', ['A'], 'feedback9', 'radio')">Tjek svar</button>
+            </div>
+            <div id="feedback9" class="feedback"></div>
+        </div>
+
+        <!-- Opgave 10: Udfyld det tomme felt -->
+        <div class="task-container">
+            <div class="task-header">
+                <h3>Opgave 10</h3>
+            </div>
+            <p>Prøv selv at løse denne ligning:</p>
+            <p>\[
+            3 \cdot (x + 2) = 18
+            \]</p>
+            <p>Hvad er \( x \)?</p>
+            <p>\( x = \)</p>
+            <input type="text" id="q10" placeholder="Dit svar">
+            <div class="buttons">
+                <button onclick="checkAnswer('q10', ['4'], 'feedback10')">Tjek svar</button>
+            </div>
+            <div id="feedback10" class="feedback"></div>
+        </div>
+
+        <hr>
+        <h3>Opsummering</h3>
+        <p>Når vi arbejder med ligninger, skal vi tænke på en vægt: Begge sider skal altid være i balance. Vi har lært at:</p>
+        <ul>
+            <li>Trække fra eller lægge til på begge sider af lighedstegnet.</li>
+            <li>Gange eller dividere på begge sider af lighedstegnet.</li>
+            <li>Fjerne parenteser ved at gange ind i parentesen.</li>
+        </ul>
+        <p>Når vi har fundet en løsning, skal vi altid lave en prøve for at sikre os, at begge sider af ligningen stadig balancerer. Dette hjælper os med at vide, at vores løsning er korrekt.</p>
+
+        <!-- Afsluttende opgave -->
+        <div class="task-container" id="dragAndDropContainerFinal">
+            <div class="task-header">
+                <h3>Afsluttende opgave</h3>
+            </div>
+            <p>Prøv at løse denne ligning med parenteser og lav en prøve:</p>
+            <p>\[
+            2 \cdot (x + 4) = 20
+            \]</p>
+            <p>Match trinene for at finde \( x \):</p>
+            <div class="draggable-items" id="dragItemsFinal"></div>
+            <div class="dropzone-items" id="dropZonesFinal"></div>
+            <div class="buttons">
+                <button id="checkButtonFinal">Tjek</button>
+                <button id="resetButtonFinal" class="reset">Nulstil</button>
+            </div>
+            <div id="feedbackFinal" class="feedback"></div>
+            <div class="hint" id="hintFinal">Tjek dit svar og prøv igen</div>
+        </div>
+        <p>Rigtig godt arbejde! Husk, at med lidt øvelse bliver det nemmere at balancere vores "matematikvægte"! 😊</p>
+
+        <!-- JavaScript til interaktive opgaver -->
+        <script>
+            let studentName = '';
+            let score = 0;
+            const maxAttempts = 3;
+            const questionsAttempted = {};
+
+            // Start lektion ved login
+            function startLesson() {
+                studentName = document.getElementById('studentName').value;
+                if (studentName.trim() === '') {
+                    alert('Indtast venligst dit navn.');
+                } else {
+                    document.getElementById('content').style.display = 'block';
+                    document.getElementById('login').style.display = 'none';
+                    updateScoreBoard();
+                }
+            }
+
+            // Opdater scorebordet
+            function updateScoreBoard() {
+                document.getElementById('scoreBoard').textContent = `${studentName}, din samlede score er: ${score} point.`;
+            }
+
+            // Tjek svar for multiple choice og regneopgaver
+            function checkAnswer(questionId, correctAnswers, feedbackId, type = 'text') {
+                if (!questionsAttempted[questionId]) questionsAttempted[questionId] = 0;
+                questionsAttempted[questionId]++;
+                const feedback = document.getElementById(feedbackId);
+                let userAnswer;
+
+                if (type === 'radio') {
+                    const radios = document.getElementsByName(questionId);
+                    userAnswer = '';
+                    for (const radio of radios) {
+                        if (radio.checked) {
+                            userAnswer = radio.value;
+                            break;
+                        }
+                    }
+                } else {
+                    userAnswer = document.getElementById(questionId).value.replace(/\s+/g, '').replace(/\*/g, '');
+                    correctAnswers = correctAnswers.map(ans => ans.replace(/\s+/g, '').replace(/\*/g, ''));
+                }
+
+                if (correctAnswers.includes(userAnswer)) {
+                    if (questionsAttempted[questionId] <= maxAttempts) {
+                        const points = 4 - questionsAttempted[questionId];
+                        if (!questionsAttempted[questionId + '_scored']) {
+                            score += points;
+                            updateScoreBoard();
+                            questionsAttempted[questionId + '_scored'] = true;
+                        }
+                    }
+                    feedback.innerHTML = `<span class="feedback correct">Korrekt, ${studentName}! Du har fået ${4 - questionsAttempted[questionId]} point.</span>`;
+                } else {
+                    if (questionsAttempted[questionId] < maxAttempts) {
+                        feedback.innerHTML = '<span class="hint">Hint: Tjek dit svar og prøv igen.</span>';
+                    } else {
+                        let displayAnswer = correctAnswers[0];
+                        displayAnswer = displayAnswer.replace(/\+/g, ' + ').replace(/\-/g, ' - ').replace(/\*/g, ' × ');
+                        feedback.innerHTML = `<span class="error">Desværre, intet korrekt svar. Det rigtige svar er: ${displayAnswer}.</span>`;
+                    }
+                }
+                MathJax.typeset();
+            }
+
+            // Helper-funktion til at blande et array tilfældigt
+            function shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
+            }
+
+            // Funktion til at oprette træk-og-slip-opgaver
+            function createDragAndDropTask(containerId, pairs, checkButtonId, resetButtonId, hintId, feedbackId) {
+                const container = document.getElementById(containerId);
+                const draggableContainer = container.querySelector('.draggable-items');
+                const dropzoneContainer = container.querySelector('.dropzone-items');
+                const checkButton = document.getElementById(checkButtonId);
+                const resetButton = document.getElementById(resetButtonId);
+                const hint = document.getElementById(hintId);
+                const feedback = document.getElementById(feedbackId);
+                let draggedItem = null;
+
+                // Funktion til at initialisere opgaven
+                function initializeTask() {
+                    // Ryd draggable og dropzone containere
+                    draggableContainer.innerHTML = '';
+                    dropzoneContainer.innerHTML = '';
+
+                    // Opret draggable elementer
+                    const draggables = pairs.map(pair => {
+                        const item = document.createElement('div');
+                        item.className = 'item';
+                        item.draggable = true;
+                        item.id = pair.draggableId;
+                        item.innerHTML = pair.draggable;
+                        return item;
+                    });
+
+                    // Bland rækkefølgen af draggable elementer
+                    const shuffledDraggables = shuffleArray([...draggables]);
+
+                    // Tilføj draggable elementer til containeren
+                    shuffledDraggables.forEach(item => draggableContainer.appendChild(item));
+
+                    // Tilføj dropzones i den oprindelige rækkefølge
+                    pairs.forEach(pair => {
+                        const zone = document.createElement('div');
+                        zone.className = 'dropzone';
+                        zone.setAttribute('data-accept', pair.draggableId);
+                        zone.textContent = pair.dropzone;
+                        dropzoneContainer.appendChild(zone);
+                    });
+
+                    // Fjern alle feedback klasser
+                    const dropzones = dropzoneContainer.querySelectorAll('.dropzone');
+                    dropzones.forEach(zone => {
+                        zone.classList.remove('correct', 'incorrect');
+                    });
+
+                    // Gem hint og feedback skjult
+                    hint.style.display = 'none';
+                    feedback.innerHTML = '';
+
+                    // Reset draggable items' baggrundsfarve og tekstfarve
+                    const draggablesReset = draggableContainer.querySelectorAll('.item');
+                    draggablesReset.forEach(item => {
+                        item.style.backgroundColor = '#ecf0f1'; // Standard farve
+                        item.style.color = 'black';
+                    });
+
+                    // Vedhæft event listeners til draggables
+                    const draggablesNew = draggableContainer.querySelectorAll('.item');
+                    draggablesNew.forEach(item => {
+                        item.addEventListener('dragstart', function(e) {
+                            draggedItem = this;
+                            setTimeout(() => {
+                                this.style.display = 'none';
+                            }, 0);
+                            const img = new Image();
+                            img.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'%3E%3C/svg%3E";
+                            e.dataTransfer.setDragImage(img, 0, 0);
+                        });
+
+                        item.addEventListener('dragend', function() {
+                            setTimeout(() => {
+                                this.style.display = 'block';
+                                draggedItem = null;
+                            }, 0);
+                        });
+                    });
+
+                    // Vedhæft event listeners til dropzones
+                    const dropzonesNew = dropzoneContainer.querySelectorAll('.dropzone');
+                    dropzonesNew.forEach(zone => {
+                        zone.addEventListener('dragover', function(e) {
+                            e.preventDefault();
+                        });
+
+                        zone.addEventListener('dragenter', function(e) {
+                            e.preventDefault();
+                            this.classList.add('hovered');
+                        });
+
+                        zone.addEventListener('dragleave', function() {
+                            this.classList.remove('hovered');
+                        });
+
+                        zone.addEventListener('drop', function() {
+                            this.classList.remove('hovered');
+                            if (draggedItem) {
+                                // Fjern eksisterende item i dropzone, hvis der er en
+                                if (this.querySelector('.item')) {
+                                    const existingItem = this.querySelector('.item');
+                                    draggableContainer.appendChild(existingItem);
+                                    existingItem.style.backgroundColor = '#ecf0f1'; // Reset baggrundsfarve
+                                }
+                                this.appendChild(draggedItem);
+                                // Sæt droppet items baggrundsfarve til dropzonens baggrundsfarve
+                                const dropzoneBg = window.getComputedStyle(this).backgroundColor;
+                                draggedItem.style.backgroundColor = dropzoneBg;
+                                draggedItem.style.color = 'black';
+                            }
+                        });
+                    });
+
+                    // Nulstil antallet af forsøg for denne opgave
+                    questionsAttempted[feedbackId] = 0;
+                    questionsAttempted[feedbackId + '_scored'] = false;
+                }
+
+                // Initialiser opgaven ved start og ved reset
+                initializeTask();
+
+                // Tjek knap Event Listener
+                checkButton.addEventListener('click', function() {
+                    if (!questionsAttempted[feedbackId]) questionsAttempted[feedbackId] = 0;
+                    questionsAttempted[feedbackId]++;
+
+                    const dropzones = dropzoneContainer.querySelectorAll('.dropzone');
+                    let allCorrect = true;
+                    dropzones.forEach(zone => {
+                        const acceptedId = zone.getAttribute('data-accept');
+                        const droppedItem = zone.querySelector('.item');
+                        if (droppedItem) {
+                            if (droppedItem.id === acceptedId) {
+                                zone.classList.add('correct');
+                                zone.classList.remove('incorrect');
+                            } else {
+                                zone.classList.add('incorrect');
+                                zone.classList.remove('correct');
+                                allCorrect = false;
+                            }
+                        } else {
+                            zone.classList.add('incorrect');
+                            zone.classList.remove('correct');
+                            allCorrect = false;
+                        }
+                    });
+
+                    if (allCorrect) {
+                        if (questionsAttempted[feedbackId] <= maxAttempts) {
+                            const points = 4 - questionsAttempted[feedbackId];
+                            if (!questionsAttempted[feedbackId + '_scored']) {
+                                score += points;
+                                updateScoreBoard();
+                                questionsAttempted[feedbackId + '_scored'] = true;
+                            }
+                        }
+                        feedback.innerHTML = `<span class="feedback correct">Korrekt, ${studentName}! Du har fået ${4 - questionsAttempted[feedbackId]} point.</span>`;
+                        hint.style.display = 'none';
+                    } else {
+                        if (questionsAttempted[feedbackId] < maxAttempts) {
+                            feedback.innerHTML = `<span class="hint">Hint: Tjek dit svar og prøv igen.</span>`;
+                        } else {
+                            let correctAnswersText = '';
+                            dropzones.forEach(zone => {
+                                const acceptedId = zone.getAttribute('data-accept');
+                                const pair = pairs.find(p => p.draggableId === acceptedId);
+                                if (pair) {
+                                    correctAnswersText += `${zone.textContent} korrekt svar er: ${pair.draggable}<br>`;
+                                }
+                            });
+                            feedback.innerHTML = `<span class="error">Desværre, intet korrekt svar efter maksimalt antal forsøg. Korrekte svar:<br>${correctAnswersText}</span>`;
+                            hint.style.display = 'none';
+                        }
+                    }
+                    MathJax.typeset();
+                });
+				
+				                    // Nulstil knap Event Listener
+                    resetButton.addEventListener('click', function() {
+                        initializeTask();
+                    });
+                }
+
+                // Initialiser alle interaktive opgaver
+                document.addEventListener('DOMContentLoaded', (event) => {
+                    // Opgave 2: Træk-og-slip-opgave
+                    const pairsTask2 = [
+                        { draggableId: 'item2a', draggable: 'Træk 3 fra begge sider.', dropzone: 'Trin 1' },
+                        { draggableId: 'item2b', draggable: 'Beregn 7 - 3.', dropzone: 'Trin 2' },
+                        { draggableId: 'item2c', draggable: 'Skriv x=', dropzone: 'Trin 3' }
+                    ];
+                    createDragAndDropTask('dragAndDropContainer2', pairsTask2, 'checkButton2', 'resetButton2', 'hint2', 'feedback2');
+
+                    // Opgave 5: Træk-og-slip-opgave
+                    const pairsTask5 = [
+                        { draggableId: 'item5a', draggable: 'Divider begge sider med 2.', dropzone: 'Trin 1' },
+                        { draggableId: 'item5b', draggable: 'Beregn 8/2', dropzone: 'Trin 2' },
+                        { draggableId: 'item5c', draggable: 'Skriv x=', dropzone: 'Trin 3' }
+                    ];
+                    createDragAndDropTask('dragAndDropContainer5', pairsTask5, 'checkButton5', 'resetButton5', 'hint5', 'feedback5');
+
+                    // Opgave 8: Træk-og-slip-opgave
+                    const pairsTask8 = [
+                        { draggableId: 'item8a', draggable: 'Fjern parentesen ved at gange ind i parentesen.', dropzone: 'Trin 1' },
+                        { draggableId: 'item8b', draggable: 'Træk 10 fra begge sider.', dropzone: 'Trin 2' },
+                        { draggableId: 'item8c', draggable: 'Divider begge sider med 2.', dropzone: 'Trin 3' },
+                        { draggableId: 'item8d', draggable: 'Skriv x=', dropzone: 'Trin 4' }
+                    ];
+                    createDragAndDropTask('dragAndDropContainer8', pairsTask8, 'checkButton8', 'resetButton8', 'hint8', 'feedback8');
+
+                    // Afsluttende opgave: Træk-og-slip-opgave
+                    const pairsTaskFinal = [
+                        { draggableId: 'itemFinala', draggable: 'Fjern parentesen ved at gange ind i parentesen.', dropzone: 'Trin 1' },
+                        { draggableId: 'itemFinalb', draggable: 'Træk 8 fra begge sider.', dropzone: 'Trin 2' },
+                        { draggableId: 'itemFinalc', draggable: 'Divider begge sider med 2.', dropzone: 'Trin 3' },
+                        { draggableId: 'itemFinald', draggable: 'Skriv x=', dropzone: 'Trin 4' }
+                    ];
+                    createDragAndDropTask('dragAndDropContainerFinal', pairsTaskFinal, 'checkButtonFinal', 'resetButtonFinal', 'hintFinal', 'feedbackFinal');
+                });
+            </script>
+        </div>
+    </body>
+</html>
+
+
+             
+				
+           
