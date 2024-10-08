@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <title>Matematik Lektion: Ligningsregning</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async
+            src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+    </script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f6f9;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        p {
+            line-height: 1.6;
+            color: #34495e;
+        }
+        .task-container {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #fff;
+            border: 2px solid #2c3e50;
+            border-radius: 10px;
+            box-shadow: 2px 2px 12px rgba(0,0,0,0.1);
+        }
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .buttons button {
+            margin-top: 10px;
+            padding: 8px 12px;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #3498db;
+            color: #fff;
+        }
+        .buttons button.reset {
+            background-color: #e74c3c;
+        }
+        .feedback {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .feedback.correct {
+            color: green;
+        }
+        .feedback.incorrect {
+            color: red;
+        }
+        .hint {
+            color: orange;
+        }
+        .error {
+            color: red;
+        }
+        .draggable-items, .dropzone-items {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .item, .dropzone {
+            padding: 15px;
+            margin: 5px;
+            border: 2px dashed #2c3e50;
+            border-radius: 5px;
+            text-align: center;
+            cursor: grab;
+            background-color: #ecf0f1;
+            min-width: 180px;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .dropzone {
+            min-height: 60px;
+            flex: 1;
+        }
+        .dropzone.hovered {
+            border-color: #3498db;
+            background-color: #d0e7ff;
+        }
+        .dropzone.correct {
+            border-color: green;
+            background-color: #d4edda;
+        }
+        .dropzone.incorrect {
+            border-color: red;
+            background-color: #f8d7da;
+        }
+        .score-board {
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 2px solid #2c3e50;
+            border-radius: 10px;
+            background-color: #fff;
+            font-weight: bold;
+            font-size: 20px;
+            color: #2c3e50;
+            text-align: center;
+        }
+        .hidden {
+            display: none;
+        }
+        .login-container {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #fff;
+            border: 2px solid #2c3e50;
+            border-radius: 10px;
+            box-shadow: 2px 2px 12px rgba(0,0,0,0.1);
+        }
+        .login-container input {
+            padding: 10px;
+            font-size: 16px;
+            width: 80%;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .login-container button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #2ecc71;
+            color: #fff;
+        }
+        .radio-group {
+            margin-top: 10px;
+        }
+        .radio-group label {
+            display: block;
+            margin-bottom: 5px;
+            cursor: pointer;
+        }
+        .fill-in-blank input {
+            width: 60px;
+            text-align: center;
+            padding: 5px;
+            margin: 0 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+        <!-- Login Container -->
+        <div id="login" class="login-container">
+            <h1>Velkommen til lektionen</h1>
+            <p>Indtast dit navn for at starte:</p>
+            <input type="text" id="studentName" placeholder="Dit navn">
+            <br><br>
+            <button onclick="startLesson()">Start lektion</button>
+        </div>
+
+        <!-- Lesson Content -->
+        <div id="content" class="hidden">
+            <div id="scoreBoard" class="score-board"></div>
+
+            <!-- Sektion: Ligningsløsning -->
+            <h2>Ligningsløsning</h2>
+            <p>At løse en ligning betyder at finde den værdi af \( x \), der gør ligningen sand.</p>
+
+            <!-- Opgave 1: Forståelsesopgave (Flervalgsopgave) -->
+            <div class="task-container">
+                <div class="task-header">
+                    <h3>Opgave 1</h3>
+                </div>
+                <p>Hvad betyder det at løse en ligning?</p>
+                <div class="radio-group">
+                    <label><input type="radio" name="q1" value="A"> At finde alle mulige værdier af \( x \).</label>
+                    <label><input type="radio" name="q1" value="B"> At finde den værdi af \( x \), der gør ligningen sand.</label>
+                    <label><input type="radio" name="q1" value="C"> At omskrive ligningen til en anden form.</label>
+                </div>
+                <div class="buttons">
+                    <button onclick="checkAnswer('q1', ['B'], 'feedback1', 'radio')">Tjek svar</button>
+                </div>
+                <div id="feedback1" class="feedback"></div>
+            </div>
+
+            <!-- Opgave 2: Regneopgave -->
+            <div class="task-container">
+                <div class="task-header">
+                    <h3>Opgave 2</h3>
+                </div>
+                <p>Løs ligningen: \( 5x - 7 = 3x + 9 \)</p>
+                <p>\( x = \)<input type="text" id="q2" placeholder="Dit svar">
+                <div class="buttons"></p>
+                    <button onclick="checkAnswer('q2', ['8'], 'feedback2')">Tjek svar</button>
+                </div>
+                <div id="feedback2" class="feedback"></div>
+            </div>
+
+            <!-- Opgave 3: Træk-og-slip-opgave -->
+            <div class="task-container" id="dragAndDropContainer1">
+                <div class="task-header">
+                    <h3>Opgave 3</h3>
+                    <div class="buttons">
+                        <button onclick="checkDragDrop('dragAndDropContainer1')">Tjek svar</button>
+                        <button class="reset" onclick="resetDragDrop('dragAndDropContainer1')">Nulstil</button>
+                    </div>
+                </div>
+                <p>Match hvert trin i løsningen af ligningen \( 3x - 5 = 2x + 7 \) med den korrekte forklaring:</p>
+                <div class="draggable-items" id="dragItems1">
+                    <div class="item" draggable="true" id="item1a">\( 3x - 2x = 7 + 5 \)</div>
+                    <div class="item" draggable="true" id="item1b">\( x = 12 \)</div>
+                    <div class="item" draggable="true" id="item1c">\( 3x - 5 = 2x + 7 \)</div>
+                </div>
+                <div class="dropzone-items" id="dropZones1">
+                    <div class="dropzone" data-accept="item1c">Oprindelig ligning</div>
+                    <div class="dropzone" data-accept="item1a">Træk \( 2x \) fra begge sider og læg \( 5 \) til begge sider</div>
+                    <div class="dropzone" data-accept="item1b">Løs for \( x \)</div>
+                </div>
+                <div id="dragAndDropContainer1Feedback" class="feedback"></div>
+            </div>
+			
+           <!-- Opgave 8: Udfyld-et-felt-opgave -->
+            <div class="task-container">
+                <div class="task-header">
+                    <h3>Opgave 4</h3>
+                </div>
+                <p>Færdiggør løsningen af ligningen \( 4x + 6 = 3(x + 2) + 7 \):</p>
+                <p>
+                    Udvid højre side: \( 4x + 6 = 3x + \) <input type="text" id="q8a" class="fill-in-blank"> \( + 7 \)
+                </p>
+                <p>
+                    Saml led: \( 4x + 6 = 3x + \) <input type="text" id="q8b" class="fill-in-blank">
+                </p>
+                <p>
+                    Træk \( 3x \) fra på begge sider af lighedstegnet: \( 4x - 3x + 6 = \) <input type="text" id="q8c" class="fill-in-blank">
+                </p>
+                <p>
+                    Løs for \( x \): \( x = \) <input type="text" id="q8d" class="fill-in-blank">
+                </p>
+                <div class="buttons">
+                    <button onclick="checkFillBlanks(['q8a', 'q8b', 'q8c', 'q8d'], ['6', '13', '13', '7'], 'feedback8')">Tjek svar</button>
+                </div>
+                <div id="feedback8" class="feedback"></div>
+            </div>
+			
+            
+
+            <!-- Opgave 5: Regneopgave -->
+            <div class="task-container">
+                <div class="task-header">
+                    <h3>Opgave 5</h3>
+                </div>
+                <p>Løs ligningen: \( 7(x - 3) = 2(3x + 1) \)</p>
+                <input type="text" id="q5" placeholder="Dit svar">
+                <div class="buttons">
+                    <button onclick="checkAnswer('q5', ['23'], 'feedback5')">Tjek svar</button>
+                </div>
+                <div id="feedback5" class="feedback"></div>
+            </div>
+
+            <!-- Opgave 4: Udfyld-et-felt-opgave -->
+            <div class="task-container">
+                <div class="task-header">
+                    <h3>Opgave 6</h3>
+                </div>
+                <p>Løs ligningen ved at udfylde de manglende trin:</p>
+                <p>\( 2(x + 3) - 4 = 3x - 5 \)</p>
+                <p>
+                    Udvid parentesen: \( 2x + \) <input type="text" id="q4a" class="fill-in-blank"> \( - 4 = 3x - 5 \)
+                </p>
+                <p>
+                    Forenkle venstre side: \( 2x + \) <input type="text" id="q4b" class="fill-in-blank"> \( = 3x - 5 \)
+                </p>
+                <p>
+                    Træk \( 2x \) fra på begge sider af lighedstegnet: \( \) <input type="text" id="q4c" class="fill-in-blank"> \( = 3x - 2x -5 \)
+                </p>
+                <p>
+                    Læg 5 til på begge sider af lighedstegnet: \( x = \) <input type="text" id="q4d" class="fill-in-blank">
+                </p>
+                <div class="buttons">
+                    <button onclick="checkFillBlanks(['q4a', 'q4b', 'q4c', 'q4d'], ['6', '2', '2', '7'], 'feedback4')">Tjek svar</button>
+                </div>
+                <div id="feedback4" class="feedback"></div>
+            </div>
+            
+ 
+
+            <!-- Opgave 9: Regneopgave med kontrol -->
+            <div class="task-container">
+                <div class="task-header">
+                    <h3>Opgave 7</h3>
+                </div>
+                <p>Løs ligningen og kontroller dit resultat:</p>
+                <p>\( 5(x - 1) = 2x + 10 \)</p>
+				<p>\( x = \)<input type="text" id="q9" placeholder="Dit svar"></p>
+                <div class="buttons">
+                    <button onclick="checkAnswer('q9', ['4'], 'feedback9')">Tjek svar</button>
+                </div>
+                <div id="feedback9" class="feedback"></div>
+                <p>Kontroller dit resultat ved at indsætte \( x \) i den oprindelige ligning (dit svar skal indeholde et lighedstegn):</p>
+                <input type="text" id="q9_control" placeholder="Kontrol">
+                <div class="buttons">
+                    <button onclick="checkAnswer('q9_control', ['30=30'], 'feedback9_control')">Tjek kontrol</button>
+                </div>
+                <div id="feedback9_control" class="feedback"></div>
+            </div>
+
+            <!-- Opgave 10: Regneopgave -->
+            <div class="task-container">
+                <div class="task-header">
+                    <h3>Opgave 8</h3>
+                </div>
+                <p>Løs ligningen: \( 6 - 3(x + 2) = 2x - 1 \)</p>
+                <input type="text" id="q10" placeholder="Dit svar">
+                <div class="buttons">
+                    <button onclick="checkAnswer('q10', ['1'], 'feedback10')">Tjek svar</button>
+                </div>
+                <div id="feedback10" class="feedback"></div>
+            </div>
+        </div>
+
+        <!-- Del 2: JavaScript-koden -->
+        <script>
+            let studentName = '';
+            let score = 0;
+            const maxAttempts = 3;
+            const questionsAttempted = {};
+
+            // Start lektion ved login
+            function startLesson() {
+                studentName = document.getElementById('studentName').value;
+                if (studentName.trim() === '') {
+                    alert('Indtast venligst dit navn.');
+                } else {
+                    document.getElementById('content').classList.remove('hidden');
+                    document.getElementById('login').classList.add('hidden');
+                    updateScoreBoard();
+                }
+            }
+
+            // Opdater scorebordet
+            function updateScoreBoard() {
+                document.getElementById('scoreBoard').textContent = `${studentName}, din samlede score er: ${score} point.`;
+            }
+
+            // Tjek svar for multiple choice og regneopgaver
+            function checkAnswer(questionId, correctAnswers, feedbackId, type = 'text') {
+                if (!questionsAttempted[questionId]) questionsAttempted[questionId] = 0;
+                questionsAttempted[questionId]++;
+                const feedback = document.getElementById(feedbackId);
+                let userAnswer;
+
+                if (type === 'radio') {
+                    const radios = document.getElementsByName(questionId);
+                    userAnswer = '';
+                    for (const radio of radios) {
+                        if (radio.checked) {
+                            userAnswer = radio.value;
+                            break;
+                        }
+                    }
+                } else {
+                    userAnswer = document.getElementById(questionId).value.replace(/\s+/g, '').replace(/\*/g, '');
+                    correctAnswers = correctAnswers.map(ans => ans.replace(/\s+/g, '').replace(/\*/g, ''));
+                }
+
+                if (correctAnswers.includes(userAnswer)) {
+                    if (questionsAttempted[questionId] <= maxAttempts) {
+                        const points = 4 - questionsAttempted[questionId];
+                        if (!questionsAttempted[questionId + '_scored']) {
+                            score += points;
+                            updateScoreBoard();
+                            questionsAttempted[questionId + '_scored'] = true;
+                        }
+                    }
+                    feedback.innerHTML = `<span class="feedback correct">Korrekt, ${studentName}! Du har fået ${4 - questionsAttempted[questionId]} point.</span>`;
+                } else {
+                    if (questionsAttempted[questionId] < maxAttempts) {
+                        feedback.innerHTML = '<span class="hint">Hint: Tjek dit svar og prøv igen.</span>';
+                    } else {
+                        let displayAnswer = correctAnswers[0];
+                        displayAnswer = displayAnswer.replace(/\+/g, ' + ').replace(/\-/g, ' - ').replace(/\*/g, ' × ');
+                        feedback.innerHTML = `<span class="error">Desværre, intet korrekt svar. Det rigtige svar er: ${displayAnswer}.</span>`;
+                    }
+                }
+                MathJax.typeset();
+            }
+
+            // Tjek svar for udfyld-et-felt-opgaver
+            function checkFillBlanks(ids, correctAnswers, feedbackId) {
+                let isCorrect = true;
+                ids.forEach((id, index) => {
+                    const userAnswer = document.getElementById(id).value.replace(/\s+/g, '').toLowerCase();
+                    const correctAnswer = correctAnswers[index].replace(/\s+/g, '').toLowerCase();
+                    if (userAnswer !== correctAnswer) {
+                        isCorrect = false;
+                    }
+                });
+                const feedback = document.getElementById(feedbackId);
+                const questionId = feedbackId;
+                if (!questionsAttempted[questionId]) questionsAttempted[questionId] = 0;
+                questionsAttempted[questionId]++;
+                if (isCorrect) {
+                    if (questionsAttempted[questionId] <= maxAttempts) {
+                        const points = 4 - questionsAttempted[questionId];
+                        if (!questionsAttempted[questionId + '_scored']) {
+                            score += points;
+                            updateScoreBoard();
+                            questionsAttempted[questionId + '_scored'] = true;
+                        }
+                    }
+                    feedback.innerHTML = `<span class="feedback correct">Korrekt! Godt klaret, ${studentName}! Du har fået ${4 - questionsAttempted[questionId]} point.</span>`;
+                } else {
+                    if (questionsAttempted[questionId] < maxAttempts) {
+                        feedback.innerHTML = '<span class="hint">Hint: Tjek dine svar og prøv igen.</span>';
+                    } else {
+                        feedback.innerHTML = '<span class="error">Desværre, intet korrekt svar.</span>';
+                    }
+                }
+                MathJax.typeset();
+            }
+
+            // Helper-funktion til at blande et array tilfældigt
+            function shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
+            }
+
+            // Opretter en drag-and-drop opgave
+            function createDragAndDropTask(containerId, pairs) {
+                const container = document.getElementById(containerId);
+
+                // Opret Draggable Items
+                const draggableContainer = container.querySelector('.draggable-items');
+                draggableContainer.innerHTML = ''; // Ryd eksisterende items
+                const shuffledPairs = shuffleArray([...pairs]); // Blande rækkefølgen
+
+                shuffledPairs.forEach(pair => {
+                    const item = document.createElement('div');
+                    item.className = 'item';
+                    item.draggable = true;
+                    item.id = pair.draggableId;
+                    item.innerHTML = `${pair.draggable}`;
+                    draggableContainer.appendChild(item);
+                });
+
+                // Opret Dropzones
+                const dropzoneContainer = container.querySelector('.dropzone-items');
+                dropzoneContainer.innerHTML = ''; // Ryd eksisterende dropzones
+
+                pairs.forEach(pair => {
+                    const zone = document.createElement('div');
+                    zone.className = 'dropzone';
+                    zone.setAttribute('data-accept', pair.draggableId);
+                    zone.innerHTML = `${pair.dropzone}`;
+                    dropzoneContainer.appendChild(zone);
+                });
+
+                // Tilføj event listeners
+                const draggables = draggableContainer.querySelectorAll('.item');
+                const dropzones = dropzoneContainer.querySelectorAll('.dropzone');
+                let draggedItem = null;
+
+                draggables.forEach(item => {
+                    item.addEventListener('dragstart', function(e) {
+                        draggedItem = this;
+                        setTimeout(() => {
+                            this.style.display = 'none';
+                        }, 0);
+                        const img = new Image();
+                        img.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'%3E%3C/svg%3E";
+                        e.dataTransfer.setDragImage(img, 0, 0);
+                    });
+
+                    item.addEventListener('dragend', function() {
+                        setTimeout(() => {
+                            draggedItem.style.display = 'block';
+                            draggedItem = null;
+                        }, 0);
+                    });
+                });
+
+                dropzones.forEach(zone => {
+                    zone.addEventListener('dragover', function(e) {
+                        e.preventDefault();
+                    });
+
+                    zone.addEventListener('dragenter', function(e) {
+                        e.preventDefault();
+                        this.classList.add('hovered');
+                    });
+
+                    zone.addEventListener('dragleave', function() {
+                        this.classList.remove('hovered');
+                    });
+
+                    zone.addEventListener('drop', function() {
+                        this.classList.remove('hovered');
+                        if (draggedItem) {
+                            if (this.querySelector('.item')) {
+                                const existingItem = this.querySelector('.item');
+                                container.querySelector('.draggable-items').appendChild(existingItem);
+                            }
+                            this.appendChild(draggedItem);
+                            MathJax.typeset();
+                        }
+                    });
+                });
+
+                MathJax.typeset();
+            }
+
+            function checkDragDrop(containerId) {
+                const container = document.getElementById(containerId);
+                const dropzones = container.querySelectorAll('.dropzone');
+                let correctMatches = 0;
+
+                dropzones.forEach(zone => {
+                    const accepted = zone.getAttribute('data-accept');
+                    const dropped = zone.querySelector('.item');
+                    if (dropped && dropped.id === accepted) {
+                        zone.classList.add('correct');
+                        zone.classList.remove('incorrect');
+                        correctMatches++;
+                    } else {
+                        zone.classList.add('incorrect');
+                        zone.classList.remove('correct');
+                    }
+                });
+
+                // Bestem korrekt feedback-element ved hjælp af containerId
+                const feedbackId = `${containerId}Feedback`; // Feedback-id er baseret på containerId
+                const feedback = document.getElementById(feedbackId);
+                const totalPairs = dropzones.length;
+
+                // Points system
+                const questionId = containerId;
+                if (!questionsAttempted[questionId]) questionsAttempted[questionId] = 0;
+                questionsAttempted[questionId]++;
+
+                if (correctMatches === totalPairs) {
+                    if (questionsAttempted[questionId] <= maxAttempts) {
+                        const points = 4 - questionsAttempted[questionId];
+                        if (!questionsAttempted[questionId + '_scored']) {
+                            score += points;
+                            updateScoreBoard();
+                            questionsAttempted[questionId + '_scored'] = true;
+                        }
+                    }
+                    feedback.innerHTML = `<span class="feedback correct">Alle match er korrekte! Godt gået, ${studentName}! Du har fået ${4 - questionsAttempted[questionId]} point.</span>`;
+                } else {
+                    if (questionsAttempted[questionId] < maxAttempts) {
+                        feedback.innerHTML = `<span class="hint">Du har ${correctMatches} ud af ${totalPairs} korrekte match. Prøv igen.</span>`;
+                    } else {
+                        feedback.innerHTML = `<span class="error">Desværre, intet korrekt svar.</span>`;
+                    }
+                }
+                MathJax.typeset();
+            }
+
+            // Nulstil drag-and-drop opgaver
+            function resetDragDrop(containerId) {
+                const container = document.getElementById(containerId);
+                const draggableContainer = container.querySelector('.draggable-items');
+                const dropzones = container.querySelectorAll('.dropzone');
+                const feedbackId = `${containerId}Feedback`; // Feedback-ID
+                const feedback = document.getElementById(feedbackId);
+
+                // Flyt alle droppede items tilbage
+                dropzones.forEach(zone => {
+                    const item = zone.querySelector('.item');
+                    if (item) {
+                        draggableContainer.appendChild(item);
+                    }
+                    zone.classList.remove('correct', 'incorrect');
+                });
+
+                feedback.innerHTML = '';
+                MathJax.typeset();
+            }
+
+            // Initialiser alle drag-and-drop opgaver
+            document.addEventListener('DOMContentLoaded', (event) => {
+                // Opgave 3: Træk-og-slip-opgave
+                const pairsTask1 = [
+                    { draggableId: 'item1a', draggable: '\\( 3x - 5 = 2x + 7 \\)', dropzone: 'Oprindelig ligning' },
+                    { draggableId: 'item1b', draggable: '\\( 3x - 2x = 7 + 5 \\)', dropzone: 'Træk \\( 2x \\) fra begge sider og læg \\( 5 \\) til begge sider' },
+                    { draggableId: 'item1c', draggable: '\\( x = 12 \\)', dropzone: 'Løs for \\( x \\)' }
+                ];
+                createDragAndDropTask('dragAndDropContainer1', pairsTask1);
+
+                // Opgave 6: Træk-og-slip-opgave
+                const pairsTask2 = [
+                    { draggableId: 'item2a', draggable: '\\( x = 2 \\)', dropzone: '\\( 2x + 5 = 9 \\)' },
+                    { draggableId: 'item2b', draggable: '\\( x = 4 \\)', dropzone: '\\( 3x - 4 = 8 \\)' },
+                    { draggableId: 'item2c', draggable: '\\( x = 7 \\)', dropzone: '\\( x - 3 = 4 \\)' }
+                ];
+                createDragAndDropTask('dragAndDropContainer2', pairsTask2);
+
+                MathJax.typeset();
+            });
+        </script>
+
+</body>
+</html>
