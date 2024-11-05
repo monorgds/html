@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <title>Koordinatsystem Spil</title>
+    <style>
+        /* Generel styling */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            background: linear-gradient(to right, #a1c4fd, #c2e9fb);
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Forhindrer scroll når animationer kører */
+        }
+
+        h1 {
+            margin-top: 20px;
+            color: #333;
+        }
+
+        #game-container {
+            display: inline-block;
+            position: relative;
+            margin-top: 20px;
+        }
+
+        /* Informationspanelet */
+        #info-panel {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 220px; /* Fast bredde for at lette beregninger */
+            height: 100px; /* Fast højde for at lette beregninger */
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            font-size: 16px;
+            color: #333;
+            z-index: 2; /* Sørger for, at panelet ligger over canvas */
+        }
+
+        #info-panel p {
+            margin: 5px 0;
+        }
+
+        /* Gør punktdisplay større og fed */
+        #point-display {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        /* Canvas styling */
+        #coordinate-system {
+            border: 2px solid #333;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            cursor: crosshair;
+            position: relative;
+            z-index: 1; /* Under informationspanelet */
+        }
+
+        /* Startknap */
+        #start-button {
+            margin-top: 30px;
+            padding: 12px 25px;
+            font-size: 18px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #start-button:hover {
+            background-color: #45a049;
+        }
+
+        /* Highscore visning */
+        #highscore {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #333;
+        }
+
+        /* Feedback tekst */
+        #feedback {
+            margin-top: 10px;
+            font-size: 18px;
+            height: 24px;
+            color: #ff5722;
+            font-weight: bold;
+        }
+
+        /* Slutbesked */
+        #end-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            z-index: 3;
+            display: none; /* Skjult som standard */
+        }
+
+        /* Animation for slutningen */
+        @keyframes celebration {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(3); opacity: 0; }
+        }
+
+        .star {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: gold;
+            border-radius: 50%;
+            animation: celebration 1.5s ease-out forwards;
+            opacity: 0;
+        }
+
+        /* Flere animationer for variation */
+        @keyframes sparkle {
+            0% { transform: scale(0.5); opacity: 1; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+
+        .sparkle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background-color: pink;
+            border-radius: 50%;
+            animation: sparkle 1s ease-out forwards;
+            opacity: 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Hvor mange punkter kan du placere på 3 minutter?</h1>
+    <div id="game-container">
+        <div id="info-panel">
+            <p id="point-display">Klik på "Start Spil" for at begynde!</p>
+            <p>Rigtige: <span id="correct-count">0</span></p>
+            <p>Tid tilbage: <span id="timer">180</span> sekunder</p>
+        </div>
+        <canvas id="coordinate-system" width="600" height="600"></canvas>
+    </div>
+    <button id="start-button">Start Spil</button>
+    <div id="highscore"></div>
+    <div id="feedback"></div>
+    <div id="end-message"></div> <!-- Slutbesked -->
+
+    <script>
+        // Hent elementer
+        const canvas = document.getElementById('coordinate-system');
+        const ctx = canvas.getContext('2d');
+        const pointDisplay = document.getElementById('point-display');
+        const correctCountEl = document.getElementById('correct-count');
+        const timerEl = document.getElementById('timer');
+        const startButton = document.getElementById('start-button');
+        const highscoreEl = document.getElementById('highscore');
+        const feedbackEl = document.getElementById('feedback');
+        const endMessageEl = document.getElementById('end-message');
+
+        // Spilvariabler
+        let correctCount = 0;
+        let time = 180; // 3 minutter i sekunder
+        let gameInterval;
+        let currentPoint = { x: 0, y: 0 };
+        let gameActive = false;
+        let highscore = { correct: 0 };
+
+        // Dimensioner for informationspanelet
+        const infoPanelWidth = 220; // Samme som CSS
+        const infoPanelHeight = 100; // Samme som CSS
+
+        // Tegn koordinatsystemet
+        function drawCoordinateSystem() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Baggrund
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Akser
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.moveTo(0, canvas.height / 2);
+            ctx.lineTo(canvas.width, canvas.height / 2);
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Markeringer og tal
+            ctx.fillStyle = '#333';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = '12px Arial';
+            for (let i = -10; i <= 10; i++) {
+                if (i === 0) continue; // Springer origo over
+
+                // X-akse markeringer
+                ctx.beginPath();
+                ctx.moveTo(canvas.width / 2 + i * 30, canvas.height / 2 - 5);
+                ctx.lineTo(canvas.width / 2 + i * 30, canvas.height / 2 + 5);
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                ctx.fillText(i, canvas.width / 2 + i * 30, canvas.height / 2 + 15);
+
+                // Y-akse markeringer
+                ctx.beginPath();
+                ctx.moveTo(canvas.width / 2 - 5, canvas.height / 2 - i * 30);
+                ctx.lineTo(canvas.width / 2 + 5, canvas.height / 2 - i * 30);
+                ctx.stroke();
+                ctx.fillText(i, canvas.width / 2 - 15, canvas.height / 2 - i * 30);
+            }
+        }
+
+        // Generer et tilfældigt punkt, undgå informationspanelet området
+        function generateRandomPoint() {
+            let x, y;
+            let attempts = 0;
+            const maxAttempts = 100;
+            do {
+                x = Math.floor(Math.random() * 21) - 10;
+                y = Math.floor(Math.random() * 21) - 10;
+                const pixelX = x * 30 + canvas.width / 2;
+                const pixelY = -y * 30 + canvas.height / 2;
+
+                // Definer området dækket af informationspanelet
+                const infoPanelRect = {
+                    left: 10,
+                    top: 10,
+                    right: 10 + infoPanelWidth,
+                    bottom: 10 + infoPanelHeight
+                };
+
+                // Tjek om punktet falder inden for informationspanelet
+                if (pixelX >= infoPanelRect.left && pixelX <= infoPanelRect.right &&
+                    pixelY >= infoPanelRect.top && pixelY <= infoPanelRect.bottom) {
+                    // Punktet er inden for informationspanelet, genér igen
+                    attempts++;
+                    if (attempts >= maxAttempts) {
+                        // Hvis for mange forsøg, bryd for at undgå uendelig løkke
+                        break;
+                    }
+                } else {
+                    // Punktet er uden for informationspanelet
+                    break;
+                }
+            } while (true);
+
+            currentPoint = { x, y };
+            pointDisplay.textContent = `Placer punktet: (${x}, ${y})`;
+        }
+
+        // Opdater timeren
+        function updateTimer() {
+            time--;
+            timerEl.textContent = time;
+            if (time <= 0) {
+                endGame();
+            }
+        }
+
+        // Start spillet
+        function startGame() {
+            correctCount = 0;
+            time = 180; // 3 minutter
+            gameActive = true;
+            correctCountEl.textContent = correctCount;
+            timerEl.textContent = time;
+            feedbackEl.textContent = '';
+            highscoreEl.textContent = '';
+            endMessageEl.style.display = 'none'; // Skjul slutbesked
+            drawCoordinateSystem();
+            generateRandomPoint();
+            gameInterval = setInterval(updateTimer, 1000);
+            startButton.disabled = true;
+            startButton.style.backgroundColor = '#a5a5a5';
+            startButton.style.cursor = 'not-allowed';
+        }
+
+        // Afslut spillet
+        function endGame() {
+            clearInterval(gameInterval);
+            gameActive = false;
+            feedbackEl.textContent = 'Tiden er gået!';
+            feedbackEl.style.color = '#4CAF50';
+            startButton.disabled = false;
+            startButton.style.backgroundColor = '#4CAF50';
+            startButton.style.cursor = 'pointer';
+            pointDisplay.textContent = 'Klik på "Start Spil" for at spille igen!';
+            updateHighscore();
+            showEndMessage();
+            playCelebrationAnimation();
+        }
+
+        // Opdater highscore
+        function updateHighscore() {
+            if (correctCount > highscore.correct) {
+                highscore.correct = correctCount;
+                highscoreEl.textContent = `Highscore - Rigtige: ${highscore.correct}`;
+            } else if (highscore.correct > 0) {
+                highscoreEl.textContent = `Highscore - Rigtige: ${highscore.correct}`;
+            }
+        }
+
+        // Håndter klik på canvas
+        canvas.addEventListener('click', function (e) {
+            if (!gameActive) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+
+            // Konverter klikposition til koordinater
+            const coordX = Math.round((clickX - canvas.width / 2) / 30);
+            const coordY = -Math.round((clickY - canvas.height / 2) / 30);
+
+            if (coordX === currentPoint.x && coordY === currentPoint.y) {
+                correctCount++;
+                correctCountEl.textContent = correctCount;
+                feedbackEl.textContent = 'Korrekt!';
+                feedbackEl.style.color = '#4CAF50';
+            } else {
+                feedbackEl.textContent = `Forkert! Punktet var (${currentPoint.x}, ${currentPoint.y})`;
+                feedbackEl.style.color = '#ff5722';
+            }
+
+            // Vis det korrekte punkt
+            drawCoordinateSystem();
+            ctx.beginPath();
+            ctx.arc(canvas.width / 2 + currentPoint.x * 30, canvas.height / 2 - currentPoint.y * 30, 8, 0, 2 * Math.PI);
+            ctx.fillStyle = coordX === currentPoint.x && coordY === currentPoint.y ? '#4CAF50' : '#ff5722';
+            ctx.fill();
+
+            // Generer næste punkt
+            generateRandomPoint();
+        });
+
+        // Startknap event
+        startButton.addEventListener('click', startGame);
+
+        // Initial tegning af koordinatsystemet
+        window.onload = function() {
+            drawCoordinateSystem();
+        };
+
+        // Vis slutbesked
+        function showEndMessage() {
+            endMessageEl.innerHTML = `Tillykke! Du fik <strong>${correctCount}</strong> rigtige.`;
+            endMessageEl.style.display = 'block';
+            endMessageEl.style.animation = 'fadeIn 1s';
+        }
+
+        // Tilføj fadeIn animation til slutbesked
+        const style = document.createElement('style');
+        style.innerHTML = `
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Afspil fejring animation
+        function playCelebrationAnimation() {
+            const numStars = 100;
+            for (let i = 0; i < numStars; i++) {
+                const star = document.createElement('div');
+                star.classList.add('star');
+                document.body.appendChild(star);
+                star.style.left = (Math.random() * window.innerWidth) + 'px';
+                star.style.top = (Math.random() * window.innerHeight) + 'px';
+                star.style.width = `${Math.random() * 8 + 4}px`;
+                star.style.height = `${Math.random() * 8 + 4}px`;
+                star.style.backgroundColor = getRandomColor();
+                star.style.animationDuration = `${Math.random() * 1 + 0.5}s`;
+                star.style.animationDelay = `${Math.random() * 2}s`;
+                star.style.opacity = Math.random();
+
+                // Tilføj bevægelse
+                star.style.transition = 'transform 2s ease-out, opacity 2s ease-out';
+                setTimeout(() => {
+                    star.style.transform = `translate(${Math.random() * 200 - 100}px, ${Math.random() * 200 - 100}px)`;
+                    star.style.opacity = 0;
+                }, 100);
+
+                star.addEventListener('transitionend', function() {
+                    star.remove();
+                });
+            }
+
+            // Tilføj sparkles for ekstra effekt
+            const numSparkles = 50;
+            for (let i = 0; i < numSparkles; i++) {
+                const sparkle = document.createElement('div');
+                sparkle.classList.add('sparkle');
+                document.body.appendChild(sparkle);
+                sparkle.style.left = (Math.random() * window.innerWidth) + 'px';
+                sparkle.style.top = (Math.random() * window.innerHeight) + 'px';
+                sparkle.style.width = `${Math.random() * 6 + 2}px`;
+                sparkle.style.height = `${Math.random() * 6 + 2}px`;
+                sparkle.style.backgroundColor = getRandomColor();
+                sparkle.style.animationDuration = `${Math.random() * 1 + 0.5}s`;
+                sparkle.style.animationDelay = `${Math.random() * 2}s`;
+                sparkle.style.opacity = Math.random();
+
+                // Tilføj bevægelse
+                sparkle.style.transition = 'transform 1.5s ease-out, opacity 1.5s ease-out';
+                setTimeout(() => {
+                    sparkle.style.transform = `translate(${Math.random() * 150 - 75}px, ${Math.random() * 150 - 75}px)`;
+                    sparkle.style.opacity = 0;
+                }, 100);
+
+                sparkle.addEventListener('transitionend', function() {
+                    sparkle.remove();
+                });
+            }
+        }
+
+        // Funktion til at generere tilfældige farver
+        function getRandomColor() {
+            const colors = ['#FFD700', '#FFA500', '#FF69B4', '#FF4500', '#ADFF2F', '#00FFFF', '#FF1493'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+    </script>
+</body>
+</html>
