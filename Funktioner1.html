@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <title>Ligningsløsning</title>
+    <!-- Inkluder polyfills og MathJax -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async
+            src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+    </script>
+    <!-- CSS-stilarter -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f6f9;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        p {
+            line-height: 1.6;
+            color: #34495e;
+        }
+        .task-container {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #fff;
+            border: 2px solid #2c3e50;
+            border-radius: 10px;
+            box-shadow: 2px 2px 12px rgba(0,0,0,0.1);
+        }
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .buttons button {
+            margin-top: 10px;
+            padding: 8px 12px;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #3498db;
+            color: #fff;
+            margin-right: 10px;
+        }
+        .buttons button.reset {
+            background-color: #e74c3c;
+        }
+        .feedback {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .feedback.correct {
+            color: green;
+        }
+        .feedback.incorrect {
+            color: red;
+        }
+        .hint {
+            color: orange;
+        }
+        .error {
+            color: red;
+        }
+        .draggable-items, .dropzone-items {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .item, .dropzone {
+            padding: 15px;
+            margin: 5px;
+            border: 2px dashed #2c3e50;
+            border-radius: 5px;
+            text-align: center;
+            cursor: grab;
+            background-color: #ecf0f1;
+            min-width: 180px;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .dropzone {
+            min-height: 60px;
+            flex: 1;
+        }
+        .dropzone.hovered {
+            border-color: #3498db;
+            background-color: #d0e7ff;
+        }
+        .dropzone.correct {
+            border-color: green;
+            background-color: #d4edda;
+        }
+        .dropzone.incorrect {
+            border-color: red;
+            background-color: #f8d7da;
+        }
+        .score-board {
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 2px solid #2c3e50;
+            border-radius: 10px;
+            background-color: #fff;
+            font-weight: bold;
+            font-size: 20px;
+            color: #2c3e50;
+            text-align: center;
+        }
+        .hidden {
+            display: none;
+        }
+        .login-container {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #fff;
+            border: 2px solid #2c3e50;
+            border-radius: 10px;
+            box-shadow: 2px 2px 12px rgba(0,0,0,0.1);
+        }
+        .login-container input {
+            padding: 10px;
+            font-size: 16px;
+            width: 80%;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .login-container button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #2ecc71;
+            color: #fff;
+        }
+        .radio-group {
+            margin-top: 10px;
+        }
+        .radio-group label {
+            display: block;
+            margin-bottom: 5px;
+            cursor: pointer;
+        }
+        input.fill-in-blank {
+            width: 50px !important;
+            text-align: center;
+            padding: 5px;
+            margin: 0 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .text-block {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-left: 4px solid #2c3e50;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Container -->
+    <div id="login" class="login-container">
+        <h1>Velkommen til lektionen</h1>
+        <p>Indtast dit navn for at starte:</p>
+        <input type="text" id="studentName" placeholder="Dit navn">
+        <br><br>
+        <button onclick="startLesson()">Start lektion</button>
+    </div>
+
+    <!-- Lesson Content -->
+    <div id="content" class="hidden">
+        <div id="scoreBoard" class="score-board"></div>
+
+        <!-- Opgaver vil blive genereret her -->
+        <div id="tasks"></div>
+    </div>
+
+    <!-- JavaScript-koden -->
+    <script>
+        let studentName = '';
+        let score = 0;
+        const maxAttempts = 3;
+        const questionsAttempted = {};
+        let taskNumber = 1; // Global task counter for numbering tasks
+        let uniqueId = 0; // Global unique ID counter for element IDs
+
+        // Gør tasksContainer globalt, så tasks.js kan få adgang til det
+        let tasksContainer = null;
+
+        // Start lektion ved login
+        function startLesson() {
+            studentName = document.getElementById('studentName').value;
+            if (studentName.trim() === '') {
+                alert('Indtast venligst dit navn.');
+            } else {
+                document.getElementById('content').classList.remove('hidden');
+                document.getElementById('login').classList.add('hidden');
+                updateScoreBoard();
+                initializeTasks(); // Opretter opgaverne
+            }
+        }
+
+        // Opdater scorebordet
+        function updateScoreBoard() {
+            document.getElementById('scoreBoard').textContent = `${studentName}, din samlede score er: ${score} point.`;
+        }
+
+        // Funktion til at initialisere opgaverne
+        function initializeTasks() {
+            tasksContainer = document.getElementById('tasks');
+
+            // Dynamisk indlæsning af tasks.js
+            const script = document.createElement('script');
+            script.src = 'tasks.js';
+            script.onload = function() {
+                console.log('tasks.js er blevet indlæst og opgaverne er oprettet.');
+            };
+            document.body.appendChild(script);
+        }
+
+        // Funktion til at oprette en tekstblok (ikke nummereret)
+        function createTextBlock(container, { textContent }) {
+            const textContainer = document.createElement('div');
+            textContainer.className = 'text-block';
+
+            const paragraph = document.createElement('p');
+            paragraph.innerHTML = textContent;
+            textContainer.appendChild(paragraph);
+
+            container.appendChild(textContainer);
+            MathJax.typeset();
+        }
+
+        // Funktion til at oprette en flervalgsopgave
+        function createMultipleChoiceTask(container, { taskText, options, correctAnswer }) {
+            const taskContainer = document.createElement('div');
+            taskContainer.className = 'task-container';
+
+            const header = document.createElement('div');
+            header.className = 'task-header';
+            header.innerHTML = `<h3>Opgave ${taskNumber}</h3>`;
+            taskNumber++; // Increment task number
+            taskContainer.appendChild(header);
+
+            const question = document.createElement('p');
+            question.innerHTML = taskText;
+            taskContainer.appendChild(question);
+
+            const radioGroup = document.createElement('div');
+            radioGroup.className = 'radio-group';
+
+            const questionId = `q${uniqueId++}`; // Unique ID for this question
+
+            options.forEach(option => {
+                const label = document.createElement('label');
+                const input = document.createElement('input');
+                input.type = 'radio';
+                input.name = questionId;
+                input.value = option.value;
+                label.appendChild(input);
+                label.innerHTML += ` ${option.label}`;
+                radioGroup.appendChild(label);
+            });
+
+            taskContainer.appendChild(radioGroup);
+
+            const buttonsDiv = document.createElement('div');
+            buttonsDiv.className = 'buttons';
+
+            const feedbackId = `feedback${uniqueId++}`; // Unique feedback ID
+
+            // Opret knappen og tilføj event listener
+            const checkButton = document.createElement('button');
+            checkButton.textContent = 'Tjek svar';
+            checkButton.addEventListener('click', function() {
+                checkAnswer(questionId, correctAnswer, feedbackId, 'radio');
+            });
+            buttonsDiv.appendChild(checkButton);
+
+            taskContainer.appendChild(buttonsDiv);
+
+            const feedbackDiv = document.createElement('div');
+            feedbackDiv.id = feedbackId;
+            feedbackDiv.className = 'feedback';
+            taskContainer.appendChild(feedbackDiv);
+
+            container.appendChild(taskContainer);
+            MathJax.typeset();
+        }
+
+        // Funktion til at oprette en regneopgave
+        function createCalculationTask(container, { taskText, correctAnswer }) {
+            const taskContainer = document.createElement('div');
+            taskContainer.className = 'task-container';
+
+            const header = document.createElement('div');
+            header.className = 'task-header';
+            header.innerHTML = `<h3>Opgave ${taskNumber}</h3>`;
+            taskNumber++;
+            taskContainer.appendChild(header);
+
+            const question = document.createElement('p');
+            question.innerHTML = taskText;
+            taskContainer.appendChild(question);
+
+            const inputId = `q${uniqueId++}`; // Unique input ID
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.id = inputId;
+            input.placeholder = 'Dit svar';
+            taskContainer.appendChild(input);
+
+            const buttonsDiv = document.createElement('div');
+            buttonsDiv.className = 'buttons';
+
+            const feedbackId = `feedback${uniqueId++}`; // Unique feedback ID
+
+            // Opret knappen og tilføj event listener
+            const checkButton = document.createElement('button');
+            checkButton.textContent = 'Tjek svar';
+            checkButton.addEventListener('click', function() {
+                checkAnswer(inputId, correctAnswer, feedbackId);
+            });
+            buttonsDiv.appendChild(checkButton);
+
+            taskContainer.appendChild(buttonsDiv);
+
+            const feedbackDiv = document.createElement('div');
+            feedbackDiv.id = feedbackId;
+            feedbackDiv.className = 'feedback';
+            taskContainer.appendChild(feedbackDiv);
+
+            container.appendChild(taskContainer);
+            MathJax.typeset();
+        }
+
+        // Funktion til at oprette en udfyld-et-felt-opgave
+        function createFillInBlanksTask(container, { taskText, blanks }) {
+            const taskContainer = document.createElement('div');
+            taskContainer.className = 'task-container';
+
+            const header = document.createElement('div');
+            header.className = 'task-header';
+            header.innerHTML = `<h3>Opgave ${taskNumber}</h3>`;
+            taskNumber++;
+            taskContainer.appendChild(header);
+
+            const instruction = document.createElement('p');
+            instruction.innerHTML = taskText;
+            taskContainer.appendChild(instruction);
+
+            const ids = []; // To collect IDs for inputs
+            const correctAnswers = []; // To collect correct answers
+
+            blanks.forEach((blank) => {
+                const p = document.createElement('p');
+                p.innerHTML = blank.prompt;
+
+                const inputId = `q${uniqueId++}`; // Unique input ID
+                ids.push(inputId);
+                correctAnswers.push(blank.correctAnswer);
+
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.id = inputId;
+                input.className = 'fill-in-blank';
+                p.appendChild(input);
+                if (blank.afterBlank) {
+                    p.innerHTML += blank.afterBlank;
+                }
+                taskContainer.appendChild(p);
+            });
+
+            const buttonsDiv = document.createElement('div');
+            buttonsDiv.className = 'buttons';
+
+            const feedbackId = `feedback${uniqueId++}`; // Unique feedback ID
+
+            // Opret knappen og tilføj event listener
+            const checkButton = document.createElement('button');
+            checkButton.textContent = 'Tjek svar';
+            checkButton.addEventListener('click', function() {
+                checkFillBlanks(ids, correctAnswers, feedbackId);
+            });
+            buttonsDiv.appendChild(checkButton);
+
+            taskContainer.appendChild(buttonsDiv);
+
+            const feedbackDiv = document.createElement('div');
+            feedbackDiv.id = feedbackId;
+            feedbackDiv.className = 'feedback';
+            taskContainer.appendChild(feedbackDiv);
+
+            container.appendChild(taskContainer);
+            MathJax.typeset();
+        }
+
+        // Funktion til at oprette en træk-og-slip-opgave
+        function createDragAndDropTask(container, { taskText, pairs }) {
+            const taskContainer = document.createElement('div');
+            taskContainer.className = 'task-container';
+            const containerId = `dragAndDropContainer${uniqueId++}`;
+            taskContainer.id = containerId;
+
+            const header = document.createElement('div');
+            header.className = 'task-header';
+            header.innerHTML = `<h3>Opgave ${taskNumber}</h3>`;
+            taskNumber++;
+
+            const buttonsDiv = document.createElement('div');
+            buttonsDiv.className = 'buttons';
+
+            // Opret knapperne og tilføj event listeners
+            const checkButton = document.createElement('button');
+            checkButton.textContent = 'Tjek svar';
+            checkButton.addEventListener('click', function() {
+                checkDragDrop(containerId);
+            });
+            buttonsDiv.appendChild(checkButton);
+
+            const resetButton = document.createElement('button');
+            resetButton.textContent = 'Nulstil';
+            resetButton.className = 'reset';
+            resetButton.addEventListener('click', function() {
+                resetDragDrop(containerId);
+            });
+            buttonsDiv.appendChild(resetButton);
+
+            header.appendChild(buttonsDiv);
+            taskContainer.appendChild(header);
+
+            const instruction = document.createElement('p');
+            instruction.innerHTML = taskText;
+            taskContainer.appendChild(instruction);
+
+            const draggableContainer = document.createElement('div');
+            draggableContainer.className = 'draggable-items';
+            draggableContainer.id = `dragItems${uniqueId++}`;
+            taskContainer.appendChild(draggableContainer);
+
+            const dropzoneContainer = document.createElement('div');
+            dropzoneContainer.className = 'dropzone-items';
+            dropzoneContainer.id = `dropZones${uniqueId++}`;
+            taskContainer.appendChild(dropzoneContainer);
+
+            const feedbackId = `${containerId}Feedback`;
+            const feedbackDiv = document.createElement('div');
+            feedbackDiv.id = feedbackId;
+            feedbackDiv.className = 'feedback';
+            taskContainer.appendChild(feedbackDiv);
+
+            container.appendChild(taskContainer);
+
+            // Initialiser træk-og-slip-opgaven
+            initializeDragAndDrop(containerId, pairs);
+            MathJax.typeset();
+        }
+
+        // Funktion til at oprette en regneopgave med kontrol (ikke inkluderet efter brugerens anmodning)
+        // function createCalculationWithCheckTask(...) { ... } // Ikke inkluderet
+
+        // Tjek svar for multiple choice og regneopgaver
+        function checkAnswer(questionId, correctAnswers, feedbackId, type = 'text') {
+            if (!questionsAttempted[questionId]) questionsAttempted[questionId] = 0;
+            questionsAttempted[questionId]++;
+            const feedback = document.getElementById(feedbackId);
+            let userAnswer;
+
+            if (type === 'radio') {
+                const radios = document.getElementsByName(questionId);
+                userAnswer = '';
+                for (const radio of radios) {
+                    if (radio.checked) {
+                        userAnswer = radio.value;
+                        break;
+                    }
+                }
+            } else {
+                const inputElement = document.getElementById(questionId);
+                if (inputElement) {
+                    userAnswer = inputElement.value.trim().toLowerCase();
+                    // Normalize answers by removing spaces and converting to lowercase
+                    correctAnswers = correctAnswers.map(ans => ans.trim().toLowerCase());
+                } else {
+                    userAnswer = '';
+                }
+            }
+
+            if (correctAnswers.includes(userAnswer)) {
+                if (questionsAttempted[questionId] <= maxAttempts) {
+                    const points = 4 - questionsAttempted[questionId];
+                    if (!questionsAttempted[questionId + '_scored']) {
+                        score += points;
+                        updateScoreBoard();
+                        questionsAttempted[questionId + '_scored'] = true;
+                    }
+                }
+                feedback.innerHTML = `<span class="feedback correct">Korrekt, ${studentName}! Du har fået ${4 - questionsAttempted[questionId]} point.</span>`;
+            } else {
+                if (questionsAttempted[questionId] < maxAttempts) {
+                    feedback.innerHTML = '<span class="hint">Hint: Tjek dit svar og prøv igen.</span>';
+                } else {
+                    let displayAnswer = correctAnswers[0];
+                    // Optionally format the display answer
+                    feedback.innerHTML = `<span class="error">Desværre, intet korrekt svar. Det rigtige svar er: ${displayAnswer}.</span>`;
+                }
+            }
+            MathJax.typeset();
+        }
+
+        // Tjek svar for udfyld-et-felt-opgaver
+        function checkFillBlanks(ids, correctAnswers, feedbackId) {
+            let isCorrect = true;
+            ids.forEach((id, index) => {
+                const userAnswer = document.getElementById(id).value.trim().toLowerCase();
+                const correctAnswer = correctAnswers[index].trim().toLowerCase();
+                if (userAnswer !== correctAnswer) {
+                    isCorrect = false;
+                }
+            });
+            const feedback = document.getElementById(feedbackId);
+            const questionId = feedbackId;
+            if (!questionsAttempted[questionId]) questionsAttempted[questionId] = 0;
+            questionsAttempted[questionId]++;
+            if (isCorrect) {
+                if (questionsAttempted[questionId] <= maxAttempts) {
+                    const points = 4 - questionsAttempted[questionId];
+                    if (!questionsAttempted[questionId + '_scored']) {
+                        score += points;
+                        updateScoreBoard();
+                        questionsAttempted[questionId + '_scored'] = true;
+                    }
+                }
+                feedback.innerHTML = `<span class="feedback correct">Korrekt! Godt klaret, ${studentName}! Du har fået ${4 - questionsAttempted[questionId]} point.</span>`;
+            } else {
+                if (questionsAttempted[questionId] < maxAttempts) {
+                    feedback.innerHTML = '<span class="hint">Hint: Tjek dine svar og prøv igen.</span>';
+                } else {
+                    feedback.innerHTML = `<span class="error">Desværre, intet korrekt svar.</span>`;
+                }
+            }
+            MathJax.typeset();
+        }
+
+        // Helper-funktion til at blande et array tilfældigt
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // Initialiser træk-og-slip opgaver
+        function initializeDragAndDrop(containerId, pairs) {
+            const container = document.getElementById(containerId);
+
+            // Opret Draggable Items
+            const draggableContainer = container.querySelector('.draggable-items');
+            draggableContainer.innerHTML = ''; // Ryd eksisterende items
+            const shuffledPairs = shuffleArray([...pairs]); // Blande rækkefølgen
+
+            shuffledPairs.forEach(pair => {
+                const item = document.createElement('div');
+                item.className = 'item';
+                item.draggable = true;
+                item.id = pair.draggableId; // Make sure draggableId is unique across tasks
+                item.innerHTML = `${pair.draggable}`;
+                draggableContainer.appendChild(item);
+            });
+
+            // Opret Dropzones
+            const dropzoneContainer = container.querySelector('.dropzone-items');
+            dropzoneContainer.innerHTML = ''; // Ryd eksisterende dropzones
+
+            pairs.forEach(pair => {
+                const zone = document.createElement('div');
+                zone.className = 'dropzone';
+                zone.setAttribute('data-accept', pair.draggableId);
+                zone.innerHTML = `${pair.dropzone}`;
+                dropzoneContainer.appendChild(zone);
+            });
+
+            // Tilføj event listeners
+            const draggables = draggableContainer.querySelectorAll('.item');
+            const dropzones = dropzoneContainer.querySelectorAll('.dropzone');
+            let draggedItem = null;
+
+            draggables.forEach(item => {
+                item.addEventListener('dragstart', function(e) {
+                    draggedItem = this;
+                    setTimeout(() => {
+                        this.style.display = 'none';
+                    }, 0);
+                    const img = new Image();
+                    img.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'%3E%3C/svg%3E";
+                    e.dataTransfer.setDragImage(img, 0, 0);
+                });
+
+                item.addEventListener('dragend', function() {
+                    setTimeout(() => {
+                        draggedItem.style.display = 'block';
+                        draggedItem = null;
+                    }, 0);
+                });
+            });
+
+            dropzones.forEach(zone => {
+                zone.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                });
+
+                zone.addEventListener('dragenter', function(e) {
+                    e.preventDefault();
+                    this.classList.add('hovered');
+                });
+
+                zone.addEventListener('dragleave', function() {
+                    this.classList.remove('hovered');
+                });
+
+                zone.addEventListener('drop', function() {
+                    this.classList.remove('hovered');
+                    if (draggedItem) {
+                        if (this.querySelector('.item')) {
+                            const existingItem = this.querySelector('.item');
+                            draggableContainer.appendChild(existingItem);
+                        }
+                        this.appendChild(draggedItem);
+                        MathJax.typeset();
+                    }
+                });
+            });
+
+            MathJax.typeset();
+        }
+
+        // Tjek drag-and-drop svar
+        function checkDragDrop(containerId) {
+            const container = document.getElementById(containerId);
+            const dropzones = container.querySelectorAll('.dropzone');
+            let correctMatches = 0;
+
+            dropzones.forEach(zone => {
+                const accepted = zone.getAttribute('data-accept');
+                const dropped = zone.querySelector('.item');
+                if (dropped && dropped.id === accepted) {
+                    zone.classList.add('correct');
+                    zone.classList.remove('incorrect');
+                    correctMatches++;
+                } else {
+                    zone.classList.add('incorrect');
+                    zone.classList.remove('correct');
+                }
+            });
+
+            // Bestem korrekt feedback-element ved hjælp af containerId
+            const feedbackId = `${containerId}Feedback`; // Feedback-id er baseret på containerId
+            const feedback = document.getElementById(feedbackId);
+            const totalPairs = dropzones.length;
+
+            // Points system
+            const questionId = containerId;
+            if (!questionsAttempted[questionId]) questionsAttempted[questionId] = 0;
+            questionsAttempted[questionId]++;
+
+            if (correctMatches === totalPairs) {
+                if (questionsAttempted[questionId] <= maxAttempts) {
+                    const points = 4 - questionsAttempted[questionId];
+                    if (!questionsAttempted[questionId + '_scored']) {
+                        score += points;
+                        updateScoreBoard();
+                        questionsAttempted[questionId + '_scored'] = true;
+                    }
+                }
+                feedback.innerHTML = `<span class="feedback correct">Alle match er korrekte! Godt gået, ${studentName}! Du har fået ${4 - questionsAttempted[questionId]} point.</span>`;
+            } else {
+                if (questionsAttempted[questionId] < maxAttempts) {
+                    feedback.innerHTML = `<span class="hint">Du har ${correctMatches} ud af ${totalPairs} korrekte match. Prøv igen.</span>`;
+                } else {
+                    feedback.innerHTML = `<span class="error">Desværre, intet korrekt svar.</span>`;
+                }
+            }
+            MathJax.typeset();
+        }
+
+        // Nulstil drag-and-drop opgaver
+        function resetDragDrop(containerId) {
+            const container = document.getElementById(containerId);
+            const draggableContainer = container.querySelector('.draggable-items');
+            const dropzones = container.querySelectorAll('.dropzone');
+            const feedbackId = `${containerId}Feedback`; // Feedback-ID
+            const feedback = document.getElementById(feedbackId);
+
+            // Flyt alle droppede items tilbage
+            dropzones.forEach(zone => {
+                const item = zone.querySelector('.item');
+                if (item) {
+                    draggableContainer.appendChild(item);
+                }
+                zone.classList.remove('correct', 'incorrect');
+            });
+
+            feedback.innerHTML = '';
+            MathJax.typeset();
+        }
+    </script>
+
+    <!-- Inkluder tasks.js efter de nødvendige funktioner er defineret -->
+    <script src="tasks.js"></script>
+</body>
+</html>
