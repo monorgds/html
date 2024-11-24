@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <title>Linje og Punkter Animation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            text-align: center;
+        }
+        #controls {
+            margin-bottom: 20px;
+        }
+        #controls input {
+            width: 60px;
+            padding: 5px;
+            margin: 0 10px;
+            font-size: 16px;
+        }
+        #equations {
+            font-size: 20px;
+            margin-bottom: 20px;
+            height: 100px; /* Fast højde til de tre linjer */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .equation-line {
+            margin: 5px 0;
+        }
+        .correct {
+            animation: blinkGreen 1s infinite;
+        }
+        .incorrect {
+            animation: blinkRed 1s infinite;
+        }
+        .highlight-blue {
+            animation: blinkBlue 1s infinite;
+        }
+        .highlight-purple {
+            animation: blinkPurple 1s infinite;
+        }
+        @keyframes blinkGreen {
+            0% { background-color: transparent; }
+            50% { background-color: rgba(0, 255, 0, 0.5); }
+            100% { background-color: transparent; }
+        }
+        @keyframes blinkRed {
+            0% { background-color: transparent; }
+            50% { background-color: rgba(255, 0, 0, 0.5); }
+            100% { background-color: transparent; }
+        }
+        @keyframes blinkBlue {
+            0% { color: black; }
+            50% { color: blue; font-weight: bold; }
+            100% { color: black; }
+        }
+        @keyframes blinkPurple {
+            0% { color: black; }
+            50% { color: purple; font-weight: bold; }
+            100% { color: black; }
+        }
+        canvas {
+            border: 1px solid black;
+            margin-top: 20px;
+        }
+        #resetButton {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+        /* Positionering af x og y koordinat labels */
+        .coordinate-label {
+            position: absolute;
+            font-size: 18px;
+            pointer-events: none;
+            font-weight: bold;
+        }
+        #canvas-container {
+            position: relative;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Indsæt punktet i linjens ligning</h2>
+
+    <div id="controls">
+        <label for="a">a:</label>
+        <input type="number" id="a" value="1" step="0.1">
+        <label for="b">b:</label>
+        <input type="number" id="b" value="0" step="0.1">
+        <button id="drawButton">Tegn Graf</button>
+    </div>
+
+    <div id="equations">
+        <div id="equation1" class="equation-line">y = a * x + b</div>
+        <div id="equation2" class="equation-line">&nbsp;</div>
+        <div id="equation3" class="equation-line">&nbsp;</div>
+    </div>
+
+    <div id="canvas-container">
+        <canvas id="canvas" width="500" height="500"></canvas>
+        <!-- Labels for x and y coordinates -->
+        <div id="xLabel" class="coordinate-label" style="left: 0px; top: 255px; color: blue;"></div>
+        <div id="yLabel" class="coordinate-label" style="left: 245px; top: 0px; color: purple;"></div>
+    </div>
+
+    <button id="resetButton">Nulstil</button>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const equation1 = document.getElementById('equation1');
+        const equation2 = document.getElementById('equation2');
+        const equation3 = document.getElementById('equation3');
+        const drawButton = document.getElementById('drawButton');
+        const resetButton = document.getElementById('resetButton');
+        const aInput = document.getElementById('a');
+        const bInput = document.getElementById('b');
+        const xLabel = document.getElementById('xLabel');
+        const yLabel = document.getElementById('yLabel');
+
+        let a = parseFloat(aInput.value);
+        let b = parseFloat(bInput.value);
+        let points = [];
+        let animating = false;
+
+        // Tegn koordinatsystemet og linjen
+        function drawCoordinateSystem() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Tegn akser
+            ctx.beginPath();
+            ctx.moveTo(250, 0);
+            ctx.lineTo(250, 500);
+            ctx.moveTo(0, 250);
+            ctx.lineTo(500, 250);
+            ctx.strokeStyle = 'black';
+            ctx.stroke();
+
+            // Tegn små streger på akserne
+            for (let i = -20; i <= 20; i++) {
+                const position = 250 + i * 12.5;
+                // Vandret akse (x-akse)
+                ctx.beginPath();
+                ctx.moveTo(position, 245);
+                ctx.lineTo(position, 255);
+                ctx.stroke();
+
+                // Lodret akse (y-akse)
+                ctx.beginPath();
+                ctx.moveTo(245, position);
+                ctx.lineTo(255, position);
+                ctx.stroke();
+            }
+
+            // Tegn linjen y = a*x + b
+            ctx.beginPath();
+            const startX = -20;
+            const endX = 20;
+            const startY = a * startX + b;
+            const endY = a * endX + b;
+            ctx.moveTo(250 + startX * 12.5, 250 - startY * 12.5);
+            ctx.lineTo(250 + endX * 12.5, 250 - endY * 12.5);
+            ctx.strokeStyle = 'blue';
+            ctx.stroke();
+        }
+
+        // Generer punkter
+        function generatePoints() {
+            points = [];
+            // Tilføj punkter på linjen
+            for (let x = -15; x <= 15; x += 10) {
+                const y = a * x + b;
+                if (x >= -20 && x <= 20 && y >= -20 && y <= 20) {
+                    points.push({ x: x, y: y, onLine: true });
+                }
+            }
+            // Tilføj punkter uden for linjen
+            const offPoints = [
+                { x: -10, y: -5 },
+                { x: 5, y: 10 },
+                { x: 15, y: -10 },
+                { x: 20, y: 5 },
+                { x: -15, y: 15 },
+                { x: 10, y: -15 }
+            ];
+            offPoints.forEach(p => {
+                if (p.x >= -20 && p.x <= 20 && p.y >= -20 && p.y <= 20) {
+                    points.push({ x: p.x, y: p.y, onLine: false });
+                }
+            });
+        }
+
+        // Tegn punkter
+        function drawPoints() {
+            points.forEach(point => {
+                ctx.beginPath();
+                ctx.arc(250 + point.x * 12.5, 250 - point.y * 12.5, 5, 0, 2 * Math.PI);
+                ctx.fillStyle = point.onLine ? 'green' : 'red';
+                ctx.fill();
+            });
+        }
+
+        // Tegn alt
+        function drawAll() {
+            a = parseFloat(aInput.value);
+            b = parseFloat(bInput.value);
+            equation1.textContent = `y = ${a} * x + ${b}`;
+            generatePoints();
+            drawCoordinateSystem();
+            drawPoints();
+            equation2.innerHTML = '&nbsp;';
+            equation3.innerHTML = '&nbsp;';
+            xLabel.textContent = '';
+            yLabel.textContent = '';
+            removeHighlights();
+        }
+
+        drawButton.addEventListener('click', drawAll);
+        resetButton.addEventListener('click', drawAll);
+
+        // Initial tegning
+        drawAll();
+
+        // Håndter klik på punkterne
+        canvas.addEventListener('click', async function(event) {
+            if (animating) return; // Undgå multiple animationer samtidig
+            const rect = canvas.getBoundingClientRect();
+            const x = (event.clientX - rect.left - 250) / 12.5;
+            const y = (250 - (event.clientY - rect.top)) / 12.5;
+
+            // Find det nærmeste punkt inden for en radius på 1 enhed
+            let clickedPoint = null;
+            points.forEach(point => {
+                const dx = x - point.x;
+                const dy = y - point.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance < 1) {
+                    clickedPoint = point;
+                }
+            });
+
+            if (clickedPoint) {
+                animating = true;
+                await animatePoint(clickedPoint);
+                animating = false;
+            }
+        });
+
+        // Funktion til at animere linjer og ligninger
+        async function animatePoint(point) {
+            // Tegn linje ned til x-aksen langsomt over 2 sekunder
+            await drawLineSlowly(
+                {x: point.x, y: point.y},
+                {x: point.x, y: 0},
+                'blue'
+            );
+
+            // Vis x-koordinaten på x-aksen
+            xLabel.textContent = `${point.x}`;
+            xLabel.style.left = `${250 + point.x * 12.5 - 10}px`;
+            xLabel.style.top = `${255}px`;
+
+            // Tegn linje hen til y-aksen langsomt over 2 sekunder
+            await drawLineSlowly(
+                {x: point.x, y: point.y},
+                {x: 0, y: point.y},
+                'purple'
+            );
+
+            // Vis y-koordinaten på y-aksen
+            yLabel.textContent = `${point.y}`;
+            yLabel.style.left = `${245}px`;
+            yLabel.style.top = `${250 - point.y * 12.5 + 5}px`;
+
+            // Indsæt x og y i ligningen med blinking
+            equation2.innerHTML = `<span class="highlight-purple">${point.y}</span> = ${a} * <span class="highlight-blue">${point.x}</span> + ${b}`;
+            await blinkElements(['.highlight-blue', '.highlight-purple'], 4000);
+
+            // Vis udregningen
+            const leftSide = point.y;
+            const rightSide = a * point.x + b;
+            equation3.innerHTML = `${leftSide} = ${rightSide}`;
+
+            // Farvekod resultatet
+            if (leftSide === rightSide) {
+                equation3.classList.add('correct');
+                equation3.classList.remove('incorrect');
+            } else {
+                equation3.classList.add('incorrect');
+                equation3.classList.remove('correct');
+            }
+
+            // Fjern farvekodning efter animation
+            setTimeout(() => {
+                equation3.classList.remove('correct', 'incorrect');
+            }, 2000);
+        }
+
+        // Funktion til at tegne linjer langsomt over tid
+        function drawLineSlowly(start, end, color) {
+            return new Promise((resolve) => {
+                const duration = 2000; // 2 sekunder
+                const steps = 100;
+                let currentStep = 0;
+
+                const deltaX = (end.x - start.x) * 12.5 / steps;
+                const deltaY = (end.y - start.y) * 12.5 / steps;
+
+                const interval = setInterval(() => {
+                    if (currentStep >= steps) {
+                        clearInterval(interval);
+                        resolve();
+                        return;
+                    }
+                    ctx.beginPath();
+                    ctx.moveTo(250 + start.x * 12.5, 250 - start.y * 12.5);
+                    ctx.lineTo(250 + (start.x + (deltaX / 12.5) * currentStep) * 12.5, 250 - (start.y + (deltaY / 12.5) * currentStep) * 12.5);
+                    ctx.strokeStyle = color;
+                    ctx.stroke();
+                    currentStep++;
+                }, duration / steps);
+            });
+        }
+
+        // Funktion til at blinke elementer
+        function blinkElements(selectors, duration) {
+            return new Promise((resolve) => {
+                const elements = [];
+                selectors.forEach(selector => {
+                    document.querySelectorAll(selector).forEach(el => {
+                        elements.push(el);
+                    });
+                });
+
+                // Start blink animation
+                elements.forEach(el => {
+                    el.style.animationIterationCount = 'infinite';
+                });
+
+                // Stop blink animation efter duration
+                setTimeout(() => {
+                    elements.forEach(el => {
+                        el.style.animationIterationCount = '0';
+                    });
+                    resolve();
+                }, duration);
+            });
+        }
+
+        // Funktion til at fjerne alle highlights
+        function removeHighlights() {
+            equation2.innerHTML = '&nbsp;';
+            equation3.innerHTML = '&nbsp;';
+            equation3.classList.remove('correct', 'incorrect');
+            xLabel.textContent = '';
+            yLabel.textContent = '';
+        }
+    </script>
+
+</body>
+</html>
