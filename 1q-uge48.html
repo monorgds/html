@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matematik Opgaver - Lineær Vækst</title>
+    <style>
+        /* Grundlæggende opsætning */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f9f9f9;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border-radius: 8px;
+            min-height: 80vh;
+        }
+
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+
+        /* Input sektion (Startskærm) */
+        #setup-panel {
+            text-align: center;
+            margin-top: 50px;
+            padding: 40px;
+            background-color: #e8f4f8;
+            border-radius: 12px;
+            border: 2px solid #bce0eb;
+        }
+
+        .input-group {
+            margin: 20px 0;
+        }
+
+        input[type="text"] {
+            padding: 12px 15px;
+            font-size: 18px;
+            border-radius: 6px;
+            border: 2px solid #bdc3c7;
+            width: 250px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            border-color: #3498db;
+        }
+
+        button {
+            padding: 12px 25px;
+            font-size: 18px;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-left: 10px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #219150;
+        }
+
+        /* Opgaver (Skjult indtil start) */
+        .opgave-section {
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .instruction-box {
+            background-color: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 15px;
+            margin-bottom: 40px;
+            color: #856404;
+            font-weight: 600;
+        }
+
+        .problem {
+            margin-bottom: 60px;
+            border-bottom: 2px dashed #eee;
+            padding-bottom: 40px;
+        }
+
+        .problem:last-child {
+            border-bottom: none;
+        }
+
+        /* Tabel Design */
+        .table-wrapper {
+            position: relative;
+            margin: 25px 0;
+            overflow: visible; /* Tillad vandmærke at fylde */
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: transparent;
+            position: relative;
+            z-index: 2; /* Sørg for tabel tekst er over vandmærket */
+        }
+
+        th, td {
+            border: 1px solid #333;
+            padding: 10px;
+            text-align: center;
+            font-size: 15px;
+        }
+
+        th {
+            background-color: rgba(255, 255, 255, 0.9); /* Let gennemsigtig baggrund */
+            font-weight: 600;
+        }
+
+        td {
+            background-color: rgba(255, 255, 255, 0.6); /* Mere gennemsigtig for at se vandmærke */
+        }
+
+        /* Vandmærke Design */
+        .watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-15deg);
+            font-size: 3.5rem;
+            color: rgba(0, 0, 0, 0.06); /* Meget svag grå */
+            font-weight: 900;
+            white-space: nowrap;
+            pointer-events: none; /* Klik går igennem */
+            z-index: 1; /* Under tabellen */
+            user-select: none;
+            width: 100%;
+            text-align: center;
+            text-transform: uppercase;
+            font-family: 'Arial Black', sans-serif;
+        }
+
+        /* Matematik notation */
+        .math-font {
+            font-family: "Times New Roman", Times, serif;
+            font-style: italic;
+            font-size: 1.15em;
+        }
+
+        .sub-q {
+            margin-left: 25px;
+            margin-top: 15px;
+        }
+
+        .sub-q p {
+            margin-bottom: 8px;
+        }
+
+        /* Print styles */
+        @media print {
+            body { background-color: white; padding: 0; }
+            .container { box-shadow: none; width: 100%; max-width: 100%; padding: 20px; }
+            .instruction-box { display: none; }
+            #setup-panel { display: none; }
+            .opgave-section { display: block !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- START SKÆRM -->
+    <div id="setup-panel">
+        <h2>Generering af Opgaver</h2>
+        <p>Indtast dit navn for at generere dit personlige opgavesæt.</p>
+        <div class="input-group">
+            <input type="text" id="studentName" placeholder="Dit Navn" onkeypress="handleEnter(event)">
+            <button onclick="generateAssignment()">Start</button>
+        </div>
+    </div>
+
+    <!-- OPGAVE INDHOLD -->
+    <div id="assignment-content" class="opgave-section">
+        <div class="instruction-box">
+            📝 <strong>INSTRUKTION:</strong> Tag et screenshot af opgaverne herunder (sørg for at tabellerne med dit navn i baggrunden er synlige) og indsæt billedet i dit Word-dokument.
+        </div>
+
+        <!-- OPGAVE 1 (SMS) -->
+        <div class="problem">
+            <h3>Opgave 1</h3>
+            <p>Tabellen viser udviklingen i det årlige antal sendte SMS’er i Danmark.</p>
+            
+            <div class="table-wrapper">
+                <!-- Vandmærke indsættes her via JS -->
+                <div class="watermark name-watermark">NAVN</div>
+                
+                <table id="table1">
+                    <tr>
+                        <th>År efter 2018</th>
+                        <td>0</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td>
+                    </tr>
+                    <tr id="row-sms">
+                        <th>Antal sendte SMS’er i mio.</th>
+                        <!-- Data genereres her -->
+                    </tr>
+                </table>
+            </div>
+
+            <p>I en model beskrives udviklingen ved en lineær funktion</p>
+            <p style="margin-left: 20px;"><span class="math-font">f(x) = a · x + b</span> ,</p>
+            <p>hvor <span class="math-font">f(x)</span> er antal sendte SMS’er i mio., og <span class="math-font">x</span> er antal år efter 2018.</p>
+
+            <div class="sub-q">
+                <p>a) Bestem tallene <span class="math-font">a</span> og <span class="math-font">b</span> ved lineær regression.</p>
+                <p>b) Forklar, hvad tallet <span class="math-font">a</span> fortæller om antal sendte SMS’er.</p>
+            </div>
+        </div>
+
+        <!-- OPGAVE 2 (Hundehvalp) -->
+        <div class="problem">
+            <h3>Opgave 2</h3>
+            <p>Tabellen viser udviklingen i vægten af en hundehvalp af en stor race de første uger efter fødslen.</p>
+            
+            <div class="table-wrapper">
+                <div class="watermark name-watermark">NAVN</div>
+                
+                <table id="table2">
+                    <tr>
+                        <th>Uger efter fødsel</th>
+                        <td>0</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td>
+                    </tr>
+                    <tr id="row-weight">
+                        <th>Vægt i gram</th>
+                        <!-- Data genereres her -->
+                    </tr>
+                </table>
+            </div>
+
+            <p>I en model beskrives udviklingen ved en lineær funktion</p>
+            <p style="margin-left: 20px;"><span class="math-font">g(x) = a · x + b</span> ,</p>
+            <p>hvor <span class="math-font">g(x)</span> er vægten i gram, og <span class="math-font">x</span> er antal uger efter fødslen.</p>
+
+            <div class="sub-q">
+                <p>a) Bestem tallene <span class="math-font">a</span> og <span class="math-font">b</span> ved lineær regression.</p>
+                <p>b) Forklar, hvad tallet <span class="math-font">b</span> fortæller om hvalpens vægt.</p>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    function handleEnter(e) {
+        if (e.key === 'Enter') {
+            generateAssignment();
+        }
+    }
+
+    function generateAssignment() {
+        const nameInput = document.getElementById('studentName').value;
+        
+        if (nameInput.trim() === "") {
+            alert("Venligst indtast dit navn.");
+            return;
+        }
+
+        // Opdater vandmærker
+        const watermarks = document.querySelectorAll('.name-watermark');
+        watermarks.forEach(el => el.textContent = nameInput);
+
+        // Skift visning
+        document.getElementById('setup-panel').style.display = 'none';
+        document.getElementById('assignment-content').style.display = 'block';
+
+        // Generer data
+        generateData();
+    }
+
+    function generateData() {
+        // --- OPGAVE 1 LOGIK (SMS - Aftagende) ---
+        // Original: Start ~5557, slut ~3819 (over 5 år). Hældning ca -347.
+        // Vi varierer startværdien og hældningen.
+        
+        const startSms = 5400 + Math.floor(Math.random() * 400); // Mellem 5400 og 5800
+        const slopeSms = -300 - Math.floor(Math.random() * 100); // Mellem -300 og -400
+        
+        let smsHtml = "<th>Antal sendte SMS’er i mio.</th>";
+        
+        for (let x = 0; x <= 5; x++) {
+            // Tilføjer støj: +/- 60
+            let noise = Math.floor(Math.random() * 120) - 60;
+            let val = startSms + (slopeSms * x) + noise;
+            smsHtml += `<td>${val}</td>`;
+        }
+        document.getElementById('row-sms').innerHTML = smsHtml;
+
+
+        // --- OPGAVE 2 LOGIK (Hvalp - Voksende) ---
+        // En stor hvalp (f.eks. Labrador/Schæfer) vejer ca. 400-600g ved fødsel.
+        // Tager ca. 100-200g på om ugen i starten.
+        
+        const startWeight = 450 + Math.floor(Math.random() * 150); // b-værdi: 450-600g
+        const slopeWeight = 140 + Math.floor(Math.random() * 60);  // a-værdi: 140-200g pr uge
+        
+        let weightHtml = "<th>Vægt i gram</th>";
+        
+        for (let x = 0; x <= 5; x++) {
+            // Mindre støj da vægtøgning er mere biologisk stabil end SMS'er
+            let noise = Math.floor(Math.random() * 40) - 20;
+            let val = startWeight + (slopeWeight * x) + noise;
+            weightHtml += `<td>${val}</td>`;
+        }
+        document.getElementById('row-weight').innerHTML = weightHtml;
+    }
+</script>
+
+</body>
+</html>
